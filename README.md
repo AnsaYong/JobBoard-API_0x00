@@ -157,6 +157,7 @@ To get started with the Job Board Backend:
 ```bash
 git clone https://github.com/yourusername/jobboard-backend.git
 cd jobboard-backend
+```
 
 ### Step 2: Install dependencies
 
