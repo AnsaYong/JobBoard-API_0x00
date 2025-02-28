@@ -97,8 +97,8 @@ The **Job Board Backend** is a robust, scalable API designed to manage job posti
 
 The backend uses the following key models:
 
-### **Users**
-Manages user data, including Job Seekers and Employers. This model handles authentication, permissions, and roles, ensuring that users can only access the appropriate resources based on their roles (Job Seekers, Employers, Admins). It stores user details like email, password, name, and role. 
+### **Custom Users**
+Manages user data, including Job Seekers and Employers. This model handles authentication, permissions, and roles, ensuring that users can only access the appropriate resources based on their roles (Job Seekers, Employers, Admins). It stores user details like email, password, name, and role.
 
 ### **Admin Users**
 Admin Users have elevated privileges within the platform, including managing user accounts, job postings, job applications, and generating reports. They have access to all system data and are responsible for overseeing the functionality of the platform.
