@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 
 from pathlib import Path
 import environ, os
+from datetime import timedelta
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -44,6 +45,8 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     # Third-party apps
     "rest_framework",
+    "rest_framework_simplejwt",
+    "rest_framework_simplejwt.token_blacklist",
     "corsheaders",
     "drf_yasg",
     # Local apps
@@ -63,12 +66,13 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = "JobBoard.urls"
 
-# Django REST Framework Configuration
+# Rest Framework and JWT Configuration
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
-        "rest_framework.authentication.SessionAuthentication",
-        "rest_framework.authentication.BasicAuthentication",
-        "rest_framework.authentication.TokenAuthentication",
+        # "rest_framework.authentication.SessionAuthentication",  # for browser-based login sessions
+        # "rest_framework.authentication.BasicAuthentication",  # for simple username/password authentication
+        "rest_framework_simplejwt.authentication.JWTAuthentication",  # for JWT tokens
+        "rest_framework.authentication.TokenAuthentication",  # for Django's built-in token authentication
     ),
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.IsAuthenticated",  # All views require authentication
@@ -78,6 +82,20 @@ REST_FRAMEWORK = {
     ),
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "PAGE_SIZE": 10,  # Default page size for paginated responses
+}
+
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(
+        hours=int(env("ACCESS_TOKEN_LIFETIME_HOURS", default=1))
+    ),
+    "REFRESH_TOKEN_LIFETIME": timedelta(
+        days=int(env("REFRESH_TOKEN_LIFETIME_DAYS", default=7))
+    ),
+    "ROTATE_REFRESH_TOKENS": True,
+    "BLACKLIST_AFTER_ROTATION": True,
+    "UPDATE_LAST_LOGIN": False,
+    "USER_ID_FIELD": "user_id",
+    "AUTH_HEADER_TYPES": ("Bearer",),
 }
 
 # CORS Configuration
