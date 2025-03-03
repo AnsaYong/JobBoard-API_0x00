@@ -50,7 +50,8 @@ The **Job Board Backend** is a robust, scalable API designed to manage job posti
 - **POST /api/auth/register/**: Register a new user (Job Seeker or Employer).
 - **POST /api/auth/login/**: Authenticate and generate JWT token for authenticated users.
 - **POST /api/auth/logout/**: Logout and invalidate the JWT token.
-- **POST /api/auth/password/reset/**: Send password reset link to the user's email.
+- **POST /api/auth/password/request-reset/**: Send password reset link to the user's email.
+- **POST /api/auth/password/reset/**: Reset the user's email password.
 - **POST /api/auth/password/change/**: Change password after receiving the reset token.
 
 ### 2. User Management
