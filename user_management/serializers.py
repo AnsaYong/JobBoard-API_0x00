@@ -59,5 +59,13 @@ class PasswordChangeSerializer(serializers.Serializer):
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ["user_id", "email", "username", "first_name", "last_name", "role"]
-        read_only_fields = ["user_id"]
+        fields = [
+            "user_id",
+            "email",
+            "username",
+            "first_name",
+            "last_name",
+            "role",
+            "is_active",
+        ]
+        read_only_fields = ["user_id", "is_active"]

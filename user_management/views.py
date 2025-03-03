@@ -2,6 +2,7 @@ from rest_framework import viewsets, generics, status, permissions
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework.decorators import action
 from django.core.mail import send_mail
 from django.contrib.auth import get_user_model, authenticate
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
@@ -14,6 +15,7 @@ from .serializers import (
     PasswordResetConfirmSerializer,
     PasswordChangeSerializer,
 )
+from permissions import IsJobBoardAdmin, IsEmployer, IsJobseeker
 
 
 User = get_user_model()
@@ -359,5 +361,92 @@ class PasswordChangeView(generics.UpdateAPIView):
 
 
 class UserView(viewsets.ModelViewSet):
-    queryset = User.objects.all()
     serializer_class = UserSerializer
+    permission_classes = [permissions.AllowAny]
+
+    def get_permissions(self):
+        """
+        Instantiates and returns the list of permissions that this view requires based on the action.
+
+        This method dynamically sets the permissions for the view based on the action being performed:
+        - `list`, `retrieve`, `update`, `partial_update`: Allowed for `IsJobBoardAdmin`, `IsEmployer`, `IsJobseeker`.
+        - `create`, `destroy`: Restricted to `IsJobBoardAdmin`.
+
+        **Returns:**
+        - A list of permission classes that are applied to the current action.
+        """
+        if self.action in ["list", "retrieve"]:
+            permission_classes = [IsJobBoardAdmin | IsEmployer | IsJobseeker]
+        elif self.action == "create":
+            permission_classes = [IsJobBoardAdmin]
+        elif self.action == "destroy":
+            permission_classes = [IsJobBoardAdmin]
+        else:
+            permission_classes = [IsJobBoardAdmin | IsEmployer | IsJobseeker]
+
+        return [permission() for permission in permission_classes]
+
+    def get_queryset(self):
+        """
+        Refines the queryset based on the authenticated user's role.
+
+        This method retrieves the users in the system. Admins and superusers can view all users,
+        while regular users can only view their own information.
+
+        **Returns:**
+        - A queryset of `User` objects filtered based on the user's role.
+        """
+        user = self.request.user
+
+        if user.role in ["admin", "superuser"]:
+            return User.objects.all()
+        return User.objects.filter(
+            user_id=user.user_id
+        )  # Regular users can only see their own info
+
+    @action(detail=True, methods=["post"], url_path="deactivate")
+    def deactivate(self, request, pk=None):
+        """
+        Deactivate the authenticated user's account.
+
+        This endpoint allows users to deactivate their account by setting the 'is_active' field to False.
+        Only the authenticated user can deactivate their own account.
+
+        **Responses:**
+        - **200 OK**: Account deactivated successfully.
+        - **400 Bad Request**: If an error occurs during deactivation.
+        - **403 Forbidden**: If the user attempts to deactivate another user's account.
+
+        **Example Success Response:**
+        ```json
+        {
+            "message": "Your account has been deactivated successfully."
+        }
+        ```
+
+        **Example Error Response:**
+        ```json
+        {
+            "error": "You cannot deactivate another user's account."
+        }
+        ```
+        """
+        user = self.get_object()  # User instance based on the URL parameter (pk)
+
+        if user != request.user:
+            return Response(
+                {"error": "You cannot deactivate another user's account."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        # Deactivate the user's account
+        try:
+            user.is_active = False
+            user.save()
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+        return Response(
+            {"message": "Your account has been deactivated successfully."},
+            status=status.HTTP_200_OK,
+        )

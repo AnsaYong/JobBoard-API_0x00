@@ -58,6 +58,7 @@ The **Job Board Backend** is a robust, scalable API designed to manage job posti
 
 - **GET /api/users/**: List all users (Admin).
 - **GET /api/users/{user_id}/**: Retrieve user profile details.
+- **POST /api/users/{user_id}/**: Create a new user (System/Admin).
 - **PATCH /api/users/{user_id}/**: Update user profile details.
 - **PATCH /api/users/deactivate/**: Deactivate the user's account.
 - **DELETE /api/users/{user_id}/**: Delete a user from the system (Admin).
