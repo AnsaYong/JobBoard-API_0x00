@@ -28,7 +28,7 @@ SECRET_KEY = "django-insecure-$djo^*3v3%xoex8)j@#%sv5*5yj#n$+=zh3d##bmq1l^f#evyq
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
-# DEBUG = env("DEBUG", default=False) # When in production!
+# DEBUG = env.bool("DEBUG", default=False) # When in production!
 
 ALLOWED_HOSTS = []
 
@@ -130,23 +130,23 @@ WSGI_APPLICATION = "JobBoard.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
-    }
-}
-#
-# # DATABASES = {
+# DATABASES = {
 #     "default": {
-#         "ENGINE": "django.db.backends.postgresql",
-#         "NAME": env("DB_NAME"),
-#         "USER": env("DB_USER"),
-#         "PASSWORD": env("DB_PASSWORD"),
-#         "HOST": env("DB_HOST"),
-#         # "PORT": env("DB_PORT"),  # Leave empty if using default port
+#         "ENGINE": "django.db.backends.sqlite3",
+#         "NAME": BASE_DIR / "db.sqlite3",
 #     }
 # }
+
+DATABASES = {
+    "default": {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": env("DB_NAME"),
+        "USER": env("DB_USER"),
+        "PASSWORD": env("DB_PASSWORD"),
+        "HOST": env("DB_HOST"),
+        "PORT": env("DB_PORT"),  # Leave empty if using default port
+    }
+}
 
 
 # Password validation
