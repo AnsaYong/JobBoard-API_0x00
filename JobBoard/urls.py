@@ -53,4 +53,5 @@ urlpatterns = [
     ),  # Raw OpenAPI schema in YAML format
     path("admin/", admin.site.urls),
     path("api/", include("user_management.urls")),
+    path("api/", include("job_listings.urls")),
 ]

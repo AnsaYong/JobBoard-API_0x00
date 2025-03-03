@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     "drf_yasg",
     # Local apps
     "user_management",
+    "job_listings",
 ]
 
 MIDDLEWARE = [
@@ -69,7 +70,7 @@ ROOT_URLCONF = "JobBoard.urls"
 # Rest Framework and JWT Configuration
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
-        # "rest_framework.authentication.SessionAuthentication",  # for browser-based login sessions
+        "rest_framework.authentication.SessionAuthentication",  # for browser-based login sessions
         # "rest_framework.authentication.BasicAuthentication",  # for simple username/password authentication
         "rest_framework_simplejwt.authentication.JWTAuthentication",  # for JWT tokens
         "rest_framework.authentication.TokenAuthentication",  # for Django's built-in token authentication
