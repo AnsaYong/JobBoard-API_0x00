@@ -4,6 +4,7 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.pagination import PageNumberPagination
 from rest_framework import viewsets, generics, status, permissions
+from django.db import transaction
 from django.core.mail import send_mail
 from django.contrib.auth import get_user_model, authenticate
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
@@ -416,7 +417,7 @@ class UserView(viewsets.ModelViewSet):
         ]
     }
     ```
-    - **Retrieve User (`GET /users/{id}/`):**
+    - **Retrieve User (`GET /users/{user_id}/`):**
     ```json
     {
         "user_id": "123e4567-e89b-12d3-a456-426614174000",
@@ -483,13 +484,22 @@ class UserView(viewsets.ModelViewSet):
             return User.objects.all()
         return User.objects.filter(user_id=user.user_id)
 
-    @action(detail=True, methods=["post"], url_path="deactivate")
+    @action(
+        detail=True,
+        methods=["post"],
+        url_path="deactivate",
+        permission_classes=[permissions.IsAuthenticated],
+    )
     def deactivate(self, request, pk=None):
         """
         Deactivate the authenticated user's account.
 
         This endpoint allows users to deactivate their account by setting the 'is_active' field to False.
-        Only the authenticated user can deactivate their own account.
+
+        **Security Enhancements:**
+        - Admins (`IsJobBoardAdmin`) can deactivate other users.
+        - Prevents deactivated users from making further API requests.
+        - Uses a database transaction to ensure data integrity.
 
         **Responses:**
         - **200 OK**: Account deactivated successfully.
@@ -512,16 +522,23 @@ class UserView(viewsets.ModelViewSet):
         """
         user = self.get_object()  # User instance based on the URL parameter (pk)
 
-        if user != request.user:
+        if not user.is_active:
+            return Response(
+                {"error": "Your account is already deactivated."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if request.user != user and not request.user.role == "admin":
             return Response(
                 {"error": "You cannot deactivate another user's account."},
                 status=status.HTTP_403_FORBIDDEN,
             )
 
-        # Deactivate the user's account
+        # Perform deactivation within a database transaction for data integrity (rollback on error)
         try:
-            user.is_active = False
-            user.save()
+            with transaction.atomic():
+                user.is_active = False
+                user.save()
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
