@@ -27,10 +27,10 @@ class JobApplication(models.Model):
     job_application_id = models.UUIDField(
         primary_key=True, default=uuid.uuid4, editable=False
     )
-    job_id = models.ForeignKey(
+    job = models.ForeignKey(
         JobPosting, on_delete=models.CASCADE, related_name="applications"
     )
-    job_seeker_id = models.ForeignKey(
+    job_seeker = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name="applications"
     )
     resume_url = models.TextField()
@@ -58,7 +58,7 @@ class JobApplicationStatusHistory(models.Model):
     status_hist_id = models.UUIDField(
         primary_key=True, default=uuid.uuid4, editable=False
     )
-    job_application_id = models.ForeignKey(
+    job_application = models.ForeignKey(
         JobApplication, on_delete=models.CASCADE, related_name="status_history"
     )
     status = models.ForeignKey(JobApplicationStatus, on_delete=models.CASCADE)

@@ -15,6 +15,10 @@ class JobType(models.Model):
 class Industry(models.Model):
     name = models.CharField(max_length=100, unique=True)
 
+    class Meta:
+        verbose_name = "Industry"
+        verbose_name_plural = "Industries"
+
     def __str__(self):
         return self.name
 
@@ -23,6 +27,10 @@ class Location(models.Model):
     city = models.CharField(max_length=100)
     state = models.CharField(max_length=100)
     country = models.CharField(max_length=100)
+
+    class Meta:
+        verbose_name = "Location"
+        verbose_name_plural = "Locations"
 
     def __str__(self):
         return f"{self.city}, {self.state}, {self.country}"

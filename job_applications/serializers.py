@@ -9,16 +9,16 @@ class JobApplicationStatusSerializer(serializers.ModelSerializer):
 
 
 class JobApplicationSerializer(serializers.ModelSerializer):
-    job_id = serializers.StringRelatedField()
-    job_seeker_id = serializers.StringRelatedField()
+    job = serializers.StringRelatedField()
+    job_seekerd = serializers.StringRelatedField()
     status = JobApplicationStatusSerializer()
 
     class Meta:
         model = JobApplication
         fields = [
             "job_application_id",
-            "job_id",
-            "job_seeker_id",
+            "job",
+            "job_seeker",
             "resume_url",
             "cover_letter_url",
             "status",
@@ -35,7 +35,7 @@ class JobApplicationStatusHistorySerializer(serializers.ModelSerializer):
         model = JobApplicationStatusHistory
         fields = [
             "status_hist_id",
-            "job_application_id",
+            "job_application_",
             "status",
             "changed_at",
             "changed_by",
