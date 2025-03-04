@@ -35,8 +35,36 @@ class CustomUserManager(BaseUserManager):
 
 
 class User(AbstractUser):
+    """
+    Custom User model for the job board system.
+
+    This model extends Django's AbstractUser and uses `email` as the primary authentication field.
+    It includes role-based access control and timestamps for tracking user creation and updates.
+
+    Fields:
+        - `user_id (UUIDField)`: Primary key using a UUID for uniqueness across distributed systems.
+        - `email (EmailField)`: Unique email address (used for authentication).
+        - `first_name (CharField)`: User's first name (required).
+        - `last_name (CharField)`: User's last name (required).
+        - `role (CharField)`: Defines user roles (admin, jobseeker, employer).
+        - `created_at (DateTimeField)`: Timestamp when the user was created.
+        - `updated_at (DateTimeField)`: Timestamp when the user profile was last updated.
+
+    Authentication:
+        - `username = None`: Disables username-based authentication.
+        - `USERNAME_FIELD = "email"`: Uses email for authentication.
+        - `REQUIRED_FIELDS = ["first_name", "last_name"]`: Required fields for user creation.
+
+    Meta:
+        - `ordering = ["-created_at"]`: Orders users by most recently created first.
+        - `constraints`: Ensures unique email addresses at the database level.
+
+    Methods:
+        - `__str__()`: Returns a user-friendly string representation.
+    """
+
     user_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    email = models.EmailField(unique=True, null=False, blank=False)
+    email = models.EmailField(unique=True, null=False, blank=False, db_index=True)
     first_name = models.CharField(max_length=100, null=False, blank=False)
     last_name = models.CharField(max_length=100, null=False, blank=False)
     role = models.CharField(
@@ -48,8 +76,9 @@ class User(AbstractUser):
         ),
         null=False,
         blank=False,
+        db_index=True,
     )
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     # Configure the User model to use the email field for authentication
@@ -57,7 +86,12 @@ class User(AbstractUser):
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = ["first_name", "last_name"]
 
-    objects = CustomUserManager()
+    class Meta:
+        ordering = ["-created_at"]
+        constraints = [
+            models.UniqueConstraint(fields=["email"], name="unique_email_constraint")
+        ]
 
     def __str__(self):
+        """Returns user's full name as string representation."""
         return f"{self.first_name} {self.last_name}"
