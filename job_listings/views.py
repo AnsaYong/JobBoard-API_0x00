@@ -14,9 +14,7 @@ class JobPostingViewSet(viewsets.ModelViewSet):
     This allows filtering by various job attributes such as title, location, industry, etc.
     """
 
-    queryset = JobPosting.objects.all()
     serializer_class = JobPostingSerializer
-    permission_classes = [IsAuthenticated]
     filter_backends = (filters.DjangoFilterBackend,)
     filterset_class = JobPostingFilter
 
@@ -24,6 +22,10 @@ class JobPostingViewSet(viewsets.ModelViewSet):
         """
         Instantiates and returns the list of permissions that this view requires.
         """
+        user = self.request.user
+        if user.is_superuser:
+            return []
+
         if self.action in ["list", "retrieve"]:
             permission_classes = [IsJobseeker]
         else:
