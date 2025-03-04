@@ -1,4 +1,5 @@
 from rest_framework import viewsets, generics, status, permissions
+
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -362,7 +363,6 @@ class PasswordChangeView(generics.UpdateAPIView):
 
 class UserView(viewsets.ModelViewSet):
     serializer_class = UserSerializer
-    permission_classes = [permissions.AllowAny]
 
     def get_permissions(self):
         """
@@ -375,6 +375,10 @@ class UserView(viewsets.ModelViewSet):
         **Returns:**
         - A list of permission classes that are applied to the current action.
         """
+        user = self.request.user
+        if user.is_superuser:
+            return []
+
         if self.action in ["list", "retrieve"]:
             permission_classes = [IsJobBoardAdmin | IsEmployer | IsJobseeker]
         elif self.action == "create":
@@ -398,11 +402,9 @@ class UserView(viewsets.ModelViewSet):
         """
         user = self.request.user
 
-        if user.role in ["admin", "superuser"]:
+        if user.is_superuser or user.role == "admin":
             return User.objects.all()
-        return User.objects.filter(
-            user_id=user.user_id
-        )  # Regular users can only see their own info
+        return User.objects.filter(user_id=user.user_id)
 
     @action(detail=True, methods=["post"], url_path="deactivate")
     def deactivate(self, request, pk=None):
