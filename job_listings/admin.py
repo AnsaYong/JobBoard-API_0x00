@@ -4,21 +4,21 @@ from .models import JobType, Industry, Location, JobPosting
 
 @admin.register(JobType)
 class JobTypeAdmin(admin.ModelAdmin):
-    list_display = ("id", "name")
+    list_display = ("name",)
     search_fields = ("name",)
     ordering = ("name",)
 
 
 @admin.register(Industry)
 class IndustryAdmin(admin.ModelAdmin):
-    list_display = ("id", "name")
+    list_display = ("name",)
     search_fields = ("name",)
     ordering = ("name",)
 
 
 @admin.register(Location)
 class LocationAdmin(admin.ModelAdmin):
-    list_display = ("id", "city", "state", "country")
+    list_display = ("city", "state", "country")
     search_fields = ("city", "state", "country")
     ordering = ("city", "state", "country")
 
@@ -26,7 +26,6 @@ class LocationAdmin(admin.ModelAdmin):
 @admin.register(JobPosting)
 class JobPostingAdmin(admin.ModelAdmin):
     list_display = (
-        "job_id",
         "title",
         "employer",
         "job_type",
