@@ -5,20 +5,20 @@ from .models import JobApplication, JobApplicationStatus, JobApplicationStatusHi
 class JobApplicationStatusSerializer(serializers.ModelSerializer):
     class Meta:
         model = JobApplicationStatus
-        fields = ["id", "status_code", "description"]
+        fields = ["status_id", "status_code", "description"]
 
 
 class JobApplicationSerializer(serializers.ModelSerializer):
-    job = serializers.StringRelatedField()
-    job_seeker = serializers.StringRelatedField()
+    job_id = serializers.StringRelatedField()
+    job_seeker_id = serializers.StringRelatedField()
     status = JobApplicationStatusSerializer()
 
     class Meta:
         model = JobApplication
         fields = [
             "job_application_id",
-            "job",
-            "job_seeker",
+            "job_id",
+            "job_seeker_id",
             "resume_url",
             "cover_letter_url",
             "status",
@@ -33,4 +33,10 @@ class JobApplicationStatusHistorySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = JobApplicationStatusHistory
-        fields = ["job_application", "status", "changed_at", "changed_by"]
+        fields = [
+            "status_hist_id",
+            "job_application_id",
+            "status",
+            "changed_at",
+            "changed_by",
+        ]

@@ -7,6 +7,11 @@ User = get_user_model()
 
 
 class JobApplicationStatus(models.Model):
+    """
+    Model to store the status of a job application
+    """
+
+    status_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     status_code = models.CharField(max_length=50, unique=True)
     description = models.CharField(max_length=255)
 
@@ -15,13 +20,17 @@ class JobApplicationStatus(models.Model):
 
 
 class JobApplication(models.Model):
+    """
+    Model to store the job applications
+    """
+
     job_application_id = models.UUIDField(
         primary_key=True, default=uuid.uuid4, editable=False
     )
-    job = models.ForeignKey(
+    job_id = models.ForeignKey(
         JobPosting, on_delete=models.CASCADE, related_name="applications"
     )
-    job_seeker = models.ForeignKey(
+    job_seeker_id = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name="applications"
     )
     resume_url = models.TextField()
@@ -42,7 +51,14 @@ class JobApplication(models.Model):
 
 
 class JobApplicationStatusHistory(models.Model):
-    job_application = models.ForeignKey(
+    """
+    Model to store the history of status changes of a job application
+    """
+
+    status_hist_id = models.UUIDField(
+        primary_key=True, default=uuid.uuid4, editable=False
+    )
+    job_application_id = models.ForeignKey(
         JobApplication, on_delete=models.CASCADE, related_name="status_history"
     )
     status = models.ForeignKey(JobApplicationStatus, on_delete=models.CASCADE)

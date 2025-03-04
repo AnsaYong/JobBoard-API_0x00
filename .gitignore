@@ -49,4 +49,3 @@ docker-compose.override.yml
 .env.development
 .env.production
 .env.test
-/secrets/
