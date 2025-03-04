@@ -1,14 +1,14 @@
-from rest_framework import viewsets, generics, status, permissions
-
-from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.decorators import action
+from rest_framework.response import Response
+from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework.pagination import PageNumberPagination
+from rest_framework import viewsets, generics, status, permissions
 from django.core.mail import send_mail
 from django.contrib.auth import get_user_model, authenticate
-from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
-from django.utils.encoding import force_bytes, force_str
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
+from django.utils.encoding import force_bytes, force_str
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from .serializers import (
     UserSerializer,
     RegisterSerializer,
@@ -361,8 +361,85 @@ class PasswordChangeView(generics.UpdateAPIView):
         )
 
 
+class CustomUserPagination(PageNumberPagination):
+    """
+    A custom pagination class for the User model.
+
+    Allows users to set custom page sizes and navigate through the paginated results.
+
+    **Attributes:**
+    - `page_size`: (int) Number of items per page (overrides the global PAGE_SIZE in settings.py).
+    - `page_size_query_param`: (str) URL query parameter to set the page size.
+    - `max_page_size`: (int) Maximum number of items per page.
+    """
+
+    page_size = 5
+    page_size_query_param = "page_size"
+    max_page_size = 50
+
+
 class UserView(viewsets.ModelViewSet):
+    """
+    API endpoint for managing users.
+
+    This view allows CRUD operations on users, with role-based access control.
+    It supports listing, retrieving, creating, updating, and deleting users, with pagination enabled.
+
+    **Permissions:**
+    - `list`, `retrieve`, `update`, `partial_update`: Accessible by `IsJobBoardAdmin`, `IsEmployer`, and `IsJobseeker`.
+    - `create`, `destroy`: Restricted to `IsJobBoardAdmin`.
+    - Superusers have unrestricted access.
+
+    **Pagination:**
+    - Uses `CustomUserPagination`, with a default page size of 5.
+    - Users can modify the page size using the `?page_size=` query parameter (max: 50).
+
+    **Filtering:**
+    - Admins & Superusers: Can view all users.
+    - Regular users: Can only view their own profile.
+
+    **Example Responses:**
+    - **List Users (`GET /users/`):**
+    ```json
+    {
+        "count": 100,
+        "next": "/api/users/?page=2",
+        "previous": null,
+        "results": [
+            {
+                "user_id": "123e4567-e89b-12d3-a456-426614174000",
+                "email": "john@example.com",
+                "first_name": "John",
+                "last_name": "Doe",
+                "role": "jobseeker"
+            }
+        ]
+    }
+    ```
+    - **Retrieve User (`GET /users/{id}/`):**
+    ```json
+    {
+        "user_id": "123e4567-e89b-12d3-a456-426614174000",
+        "email": "john@example.com",
+        "first_name": "John",
+        "last_name": "Doe",
+        "role": "jobseeker"
+    }
+    ```
+    - **Deactivate User (`POST /users/{id}/deactivate/`):**
+    ```json
+    {
+        "message": "Your account has been deactivated successfully."
+    }
+    ```
+
+    **Error Responses:**
+    - `403 Forbidden`: Unauthorized access to modify another user.
+    - `400 Bad Request`: If an error occurs during deactivation.
+    """
+
     serializer_class = UserSerializer
+    pagination_class = CustomUserPagination
 
     def get_permissions(self):
         """
