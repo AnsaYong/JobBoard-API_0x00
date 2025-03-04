@@ -52,7 +52,7 @@ urlpatterns = [
         "swagger.yaml", schema_view.without_ui(cache_timeout=0), name="schema-yaml"
     ),  # Raw OpenAPI schema in YAML format
     path("admin/", admin.site.urls),
-    path("api/", include("user_management.urls")),
-    path("api/", include("job_listings.urls")),
-    path("api/", include("job_applications.urls")),
+    path("api/users/", include("user_management.urls")),
+    path("api/jobs/", include("job_listings.urls")),
+    path("api/applications/", include("job_applications.urls")),
 ]

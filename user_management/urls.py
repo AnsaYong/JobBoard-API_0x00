@@ -11,12 +11,10 @@ from .views import (
 )
 
 router = DefaultRouter()
-router.register(r"users", UserView, basename="users")
+router.register(r"", UserView, basename="user")
 
 urlpatterns = [
-    # User management URLs
     path("", include(router.urls)),
-    # User authentication URLs
     path("auth/register/", RegisterView.as_view(), name="register"),
     path("auth/login/", LoginView.as_view(), name="login"),
     path("auth/logout/", LogoutView.as_view(), name="logout"),

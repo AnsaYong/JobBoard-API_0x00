@@ -8,6 +8,10 @@ User = get_user_model()
 class JobType(models.Model):
     name = models.CharField(max_length=50, unique=True)
 
+    class Meta:
+        verbose_name = "Job Type"
+        verbose_name_plural = "Job Types"
+
     def __str__(self):
         return self.name
 
@@ -29,8 +33,8 @@ class Location(models.Model):
     country = models.CharField(max_length=100)
 
     class Meta:
-        verbose_name = "Location"
-        verbose_name_plural = "Locations"
+        verbose_name = "Job Location"
+        verbose_name_plural = "Job Locations"
 
     def __str__(self):
         return f"{self.city}, {self.state}, {self.country}"
@@ -53,6 +57,8 @@ class JobPosting(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
+        verbose_name = "Job Posting"
+        verbose_name_plural = "Job Postings"
         indexes = [models.Index(fields=["job_id"])]
 
     def __str__(self):

@@ -15,6 +15,9 @@ class JobApplicationStatus(models.Model):
     status_code = models.CharField(max_length=50, unique=True)
     description = models.CharField(max_length=255)
 
+    class Meta:
+        verbose_name_plural = "Job Application Statuses"
+
     def __str__(self):
         return self.status_code
 
@@ -42,6 +45,7 @@ class JobApplication(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
+        verbose_name_plural = "Job Applications"
         indexes = [
             models.Index(fields=["job", "job_seeker"]),
         ]
@@ -66,6 +70,9 @@ class JobApplicationStatusHistory(models.Model):
     changed_by = models.ForeignKey(
         User, on_delete=models.CASCADE
     )  # Employer or Admin who changes the status
+
+    class Meta:
+        verbose_name_plural = "Job Application Status History"
 
     def __str__(self):
         return f"{self.job_application.job.title} - {self.status.status_code} at {self.changed_at}"

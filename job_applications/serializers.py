@@ -10,7 +10,7 @@ class JobApplicationStatusSerializer(serializers.ModelSerializer):
 
 class JobApplicationSerializer(serializers.ModelSerializer):
     job = serializers.StringRelatedField()
-    job_seekerd = serializers.StringRelatedField()
+    job_seeker = serializers.StringRelatedField()
     status = JobApplicationStatusSerializer()
 
     class Meta:
