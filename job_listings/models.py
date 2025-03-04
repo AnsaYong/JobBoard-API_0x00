@@ -44,5 +44,8 @@ class JobPosting(models.Model):
     posted_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    class Meta:
+        indexes = [models.Index(fields=["job_id"])]
+
     def __str__(self):
         return self.title

@@ -52,6 +52,7 @@ INSTALLED_APPS = [
     # Local apps
     "user_management",
     "job_listings",
+    "job_applications",
 ]
 
 MIDDLEWARE = [

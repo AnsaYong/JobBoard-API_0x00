@@ -1,4 +1,52 @@
-.env
+# 1. OS-Specific Files
+.DS_Store
+Thumbs.db
+
+# 2. Python-Specific Files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.log
+.Python
+env/
+venv/
+*.sqlite3
+
+# 3. Django-Specific Files
+*.log
+db.sqlite3
+/media/
+staticfiles/
+config/settings/local.py  # If you have environment-specific settings
+
+# 4. Virtual Environment & Dependency Managers
+pip-log.txt
+pip-delete-this-directory.txt
+poetry.lock
+Pipfile
+Pipfile.lock
 .venv
 
-setup_postgres.sh
+# 5. IDE & Editor Files
+.vscode/
+.idea/
+*.sublime-workspace
+*.swp
+
+# 6. Git & Version Control
+.git/
+.gitignore
+*.orig
+
+# 7. Docker & Container Files
+docker-compose.override.yml
+*.pid
+
+# 8. Environment & Secrets
+.env
+.env.local
+.env.development
+.env.production
+.env.test
+/secrets/

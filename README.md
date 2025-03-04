@@ -117,7 +117,7 @@ Fields of Interest categorize the areas in which a Job Seeker or Employer is int
 ### **Employers**
 The Employers model stores details of organizations posting jobs on the platform. Employers can create and manage job postings, view applications, and filter through job seekers based on skills, qualifications, and other criteria. This model also stores business-related information such as company name, location, and industry.
 
-### **Jobs**
+### **Job Posting**
 This model contains job posting details, including job titles, descriptions, locations, required skills, compensation, and job type (full-time, part-time, etc.). Employers can create, update, and close jobs, while job seekers can browse available listings.
 
 ### **Job Applications**
