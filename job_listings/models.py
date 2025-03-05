@@ -130,6 +130,7 @@ class JobPosting(models.Model):
     class Meta:
         verbose_name = "Job Posting"
         verbose_name_plural = "Job Postings"
+        ordering = ["-posted_at", "location", "industry"]
         indexes = [
             models.Index(fields=["job_id"]),
             models.Index(fields=["title"]),

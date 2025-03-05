@@ -520,7 +520,7 @@ class UserView(viewsets.ModelViewSet):
         }
         ```
         """
-        user = self.get_object()  # User instance based on the URL parameter (pk)
+        user = self.get_object()
 
         if not user.is_active:
             return Response(
@@ -534,7 +534,7 @@ class UserView(viewsets.ModelViewSet):
                 status=status.HTTP_403_FORBIDDEN,
             )
 
-        # Perform deactivation within a database transaction for data integrity (rollback on error)
+        # Ensure data integrity with rollback on error
         try:
             with transaction.atomic():
                 user.is_active = False

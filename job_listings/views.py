@@ -39,11 +39,9 @@ class JobPostingViewSet(viewsets.ModelViewSet):
         """
         user = self.request.user
 
-        # Admin can view all job postings
-        if user.is_staff:
+        if user.is_superuser:
             return JobPosting.objects.all()
 
-        # Regular job seekers or employers can only see active job postings
         return JobPosting.objects.filter(expiration_date__gte=datetime.now())
 
     def perform_create(self, serializer):

@@ -47,29 +47,32 @@ The **Job Board Backend** is a robust, scalable API designed to manage job posti
 
 ### 1. Authentication & Users
 
-- **POST /api/auth/register/**: Register a new user (Job Seeker or Employer).
-- **POST /api/auth/login/**: Authenticate and generate JWT token for authenticated users.
-- **POST /api/auth/logout/**: Logout and invalidate the JWT token.
-- **POST /api/auth/password/request-reset/**: Send password reset link to the user's email.
-- **POST /api/auth/password/reset/**: Reset the user's email password.
-- **POST /api/auth/password/change/**: Change password after receiving the reset token.
+- **POST /api/users/auth/register/**: Register a new user (Job Seeker or Employer).
+- **POST /api/users/auth/login/**: Authenticate and generate JWT token for authenticated users.
+- **POST /api/users/auth/logout/**: Logout and invalidate the JWT token.
+- **POST /api/users/auth/password/request-reset/**: Send password reset link to the user's email.
+- **POST /api/users/auth/password/reset/**: Reset the user's email password.
+- **PUT /api/users/auth/password/change/**: Change password after receiving the reset token.
+- **PATCH /api/users/auth/password/change/**: Change password after receiving the reset token.
 
 ### 2. User Management
 
-- **GET /api/users/**: List all users (Admin).
+- **GET /api/users/**: List users (Admin - all users; others - only themselves).
 - **GET /api/users/{user_id}/**: Retrieve user profile details.
-- **POST /api/users/{user_id}/**: Create a new user (System/Admin).
+- **POST /api/users/**: Create a new user (System/Admin).
+- **PUT /api/users/{user_id}/**: Update user profile details.
 - **PATCH /api/users/{user_id}/**: Update user profile details.
-- **PATCH /api/users/deactivate/**: Deactivate the user's account.
 - **DELETE /api/users/{user_id}/**: Delete a user from the system (Admin).
+- **POST /api/users/{user_id}/deactivate/**: Deactivate the user's account.
 
 ### 3. Job Listings & Employers
 
+- **GET /api/jobs/**: View job listings (filtered by location/industry/job type etc. or by Employer).
 - **POST /api/jobs/**: Employers create new job postings.
-- **GET /api/jobs/**: View employer’s job listings (Employer).
+- **GET /api/jobs/{job_id}**: View details of job posting.
+- **PUT /api/jobs/{job_id}/**: Update a job posting.
 - **PATCH /api/jobs/{job_id}/**: Update a job posting.
 - **DELETE /api/jobs/{job_id}/close/**: Close or delete a job posting.
-- **GET /api/jobs/**: Job Seekers can view job listings filtered by location, industry, or job type (Job seeker).
 - **GET /api/jobs/search/**: Job Seekers can search for jobs by keyword.
 
 ### 4. Job Applications & Tracking
