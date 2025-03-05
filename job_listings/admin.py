@@ -1,12 +1,5 @@
 from django.contrib import admin
-from .models import JobType, Industry, Location, JobPosting
-
-
-@admin.register(JobType)
-class JobTypeAdmin(admin.ModelAdmin):
-    list_display = ("name",)
-    search_fields = ("name",)
-    ordering = ("name",)
+from .models import Industry, Location, JobPosting, Skill
 
 
 @admin.register(Industry)
@@ -74,3 +67,10 @@ class JobPostingAdmin(admin.ModelAdmin):
             },
         ),
     )
+
+
+@admin.register(Skill)
+class SkillAdmin(admin.ModelAdmin):
+    list_display = ("name",)
+    search_fields = ("name",)
+    ordering = ("name",)

@@ -1,11 +1,5 @@
 from rest_framework import serializers
-from .models import JobPosting, JobType, Industry, Location
-
-
-class JobTypeSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = JobType
-        fields = ["id", "name"]
+from .models import JobPosting, Industry, Location
 
 
 class IndustrySerializer(serializers.ModelSerializer):
@@ -21,7 +15,6 @@ class LocationSerializer(serializers.ModelSerializer):
 
 
 class JobPostingSerializer(serializers.ModelSerializer):
-    job_type = JobTypeSerializer()
     industry = IndustrySerializer()
     location = LocationSerializer()
 
@@ -42,16 +35,14 @@ class JobPostingSerializer(serializers.ModelSerializer):
             "updated_at",
         ]
 
-    def create(self, validated_data):
-        job_type_data = validated_data.pop("job_type")
+    def perform_create(self, validated_data):
         industry_data = validated_data.pop("industry")
         location_data = validated_data.pop("location")
 
-        job_type = JobType.objects.create(**job_type_data)
         industry = Industry.objects.create(**industry_data)
         location = Location.objects.create(**location_data)
 
         job_posting = JobPosting.objects.create(
-            job_type=job_type, industry=industry, location=location, **validated_data
+            industry=industry, location=location, **validated_data
         )
         return job_posting

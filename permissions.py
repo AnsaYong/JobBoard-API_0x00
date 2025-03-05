@@ -8,7 +8,7 @@ class IsJobBoardAdmin(permissions.BasePermission):
 
     def has_permission(self, request, view):
         # Check if the user is a JobBoard Admin
-        return request.user and request.user.role == "JobBoardAdmin"
+        return request.user and request.user.role == "admin"
 
 
 class IsEmployer(permissions.BasePermission):
@@ -18,7 +18,10 @@ class IsEmployer(permissions.BasePermission):
 
     def has_permission(self, request, view):
         # Check if the user is an Employer
-        return request.user and request.user.role == "Employer"
+        print(
+            f"User: {request.user}, Role: {getattr(request.user, 'role', None)}"
+        )  # Debugging
+        return request.user and request.user.role == "employer"
 
 
 class IsJobseeker(permissions.BasePermission):
@@ -28,4 +31,5 @@ class IsJobseeker(permissions.BasePermission):
 
     def has_permission(self, request, view):
         # Check if the user is a Jobseeker
-        return request.user and request.user.role == "Jobseeker"
+        print(f"User role(IsJobseeker): {getattr(request.user, 'role', None)}")
+        return request.user and request.user.role == "jobseeker"

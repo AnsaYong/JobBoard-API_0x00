@@ -1,5 +1,5 @@
 from rest_framework import viewsets
-from rest_framework.permissions import IsAuthenticated
+from rest_framework import permissions
 from django_filters import rest_framework as filters
 from .models import JobPosting
 from .serializers import JobPostingSerializer
@@ -23,13 +23,17 @@ class JobPostingViewSet(viewsets.ModelViewSet):
         Instantiates and returns the list of permissions that this view requires.
         """
         user = self.request.user
+
         if user.is_superuser:
-            return []
+            return [permissions.AllowAny()]
 
         if self.action in ["list", "retrieve"]:
-            permission_classes = [IsJobseeker]
+            permission_classes = [IsJobseeker | IsEmployer | IsJobBoardAdmin]
+        elif self.action in ["create", "update", "partial_update", "destroy"]:
+            permission_classes = [IsEmployer | IsJobBoardAdmin]
         else:
-            permission_classes = [IsEmployer]
+            permission_classes = [permissions.IsAuthenticated]
+
         return [permission() for permission in permission_classes]
 
     def get_queryset(self):
@@ -49,4 +53,5 @@ class JobPostingViewSet(viewsets.ModelViewSet):
         Override the perform_create method to automatically assign the employer
         to the job posting.
         """
+        print("Setting employer for job posting...")
         serializer.save(employer=self.request.user)

@@ -5,17 +5,6 @@ from django.contrib.auth import get_user_model
 User = get_user_model()
 
 
-class JobType(models.Model):
-    name = models.CharField(max_length=50, unique=True)
-
-    class Meta:
-        verbose_name = "Job Type"
-        verbose_name_plural = "Job Types"
-
-    def __str__(self):
-        return self.name
-
-
 class Industry(models.Model):
     name = models.CharField(max_length=100, unique=True)
 
