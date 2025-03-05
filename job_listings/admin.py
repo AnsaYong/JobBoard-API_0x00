@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Industry, Location, JobPosting, Skill
+from .models import Industry, Location, JobPosting
 
 
 @admin.register(Industry)
@@ -11,9 +11,9 @@ class IndustryAdmin(admin.ModelAdmin):
 
 @admin.register(Location)
 class LocationAdmin(admin.ModelAdmin):
-    list_display = ("city", "state", "country")
-    search_fields = ("city", "state", "country")
-    ordering = ("city", "state", "country")
+    list_display = ("city", "country")
+    search_fields = ("city", "country")
+    ordering = ("city", "country")
 
 
 @admin.register(JobPosting)
@@ -67,10 +67,3 @@ class JobPostingAdmin(admin.ModelAdmin):
             },
         ),
     )
-
-
-@admin.register(Skill)
-class SkillAdmin(admin.ModelAdmin):
-    list_display = ("name",)
-    search_fields = ("name",)
-    ordering = ("name",)

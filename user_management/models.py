@@ -86,6 +86,8 @@ class User(AbstractUser):
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = ["first_name", "last_name"]
 
+    objects = CustomUserManager()  # Custom manager for User model
+
     class Meta:
         ordering = ["-created_at"]
         constraints = [

@@ -6,6 +6,17 @@ User = get_user_model()
 
 
 class Industry(models.Model):
+    """
+    Model to represent an industry sector.
+
+    Attributes:
+        name (str): The name of the industry (e.g., 'Tech', 'Healthcare').
+
+    Methods:
+        __str__: Return the string representation of the Industry (name).
+    """
+
+    industry_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=100, unique=True)
 
     class Meta:
@@ -13,12 +24,24 @@ class Industry(models.Model):
         verbose_name_plural = "Industries"
 
     def __str__(self):
+        """Return the name of the industry as string representation."""
         return self.name
 
 
 class Location(models.Model):
+    """
+    Model to represent a geographical location.
+
+    Attributes:
+        city (str): The name of the city.
+        country (str): The name of the country.
+
+    Methods:
+        __str__: Return the string representation of the Location, which is a combination of city and country.
+    """
+
+    location_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     city = models.CharField(max_length=100)
-    state = models.CharField(max_length=100)
     country = models.CharField(max_length=100)
 
     class Meta:
@@ -26,18 +49,8 @@ class Location(models.Model):
         verbose_name_plural = "Job Locations"
 
     def __str__(self):
-        return f"{self.city}, {self.state}, {self.country}"
-
-
-class Skill(models.Model):
-    name = models.CharField(max_length=100, unique=True)
-
-    class Meta:
-        verbose_name = "Skill"
-        verbose_name_plural = "Skills"
-
-    def __str__(self):
-        return self.name
+        """Return the city and country as string representation."""
+        return f"{self.city}, {self.country}"
 
 
 class JobPosting(models.Model):
@@ -49,7 +62,7 @@ class JobPosting(models.Model):
     - `employer`: The employer creating the job posting, related to the `User` model (ForeignKey).
     - `title`: The title of the job posting (max length: 255 characters).
     - `description`: A detailed description of the job (TextField).
-    - `job_type`: The type of job (e.g., full-time, part-time), related to the `JobType` model (ForeignKey).
+    - `job_type`: The type of job (e.g., full-time, part-time) (str).
     - `location`: The job location, related to the `Location` model (ForeignKey).
     - `industry`: The industry under which the job falls, related to the `Industry` model (ForeignKey).
     - `skills_required`: A list of skills required for the job (TextField).
@@ -83,9 +96,11 @@ class JobPosting(models.Model):
 
     **Relationships:**
     - `employer` is a ForeignKey to the `User` model, linking the job to the employer's profile.
-    - `job_type` is a ForeignKey to the `JobType` model, specifying the type of job.
     - `location` is a ForeignKey to the `Location` model, indicating the job's location.
     - `industry` is a ForeignKey to the `Industry` model, representing the industry category of the job.
+
+    **Methods:**
+    - `__str__`: Returns the title of the job posting as a string representation.
 
     """
 
@@ -100,17 +115,21 @@ class JobPosting(models.Model):
         choices=(
             ("part-time", "Part-time"),
             ("full-time", "Full-time"),
+            ("contract", "Contract"),
+            ("internship", "Internship"),
             ("remote", "Remote"),
         ),
         null=False,
         blank=False,
         db_index=True,
     )
-    location = models.ForeignKey(Location, on_delete=models.CASCADE, db_index=True)
-    industry = models.ForeignKey(Industry, on_delete=models.CASCADE, db_index=True)
-    skills_required = models.ManyToManyField(
-        Skill, db_index=True, related_name="job_postings"
+    location = models.ForeignKey(
+        Location, related_name="job_postings", on_delete=models.CASCADE, db_index=True
     )
+    industry = models.ForeignKey(
+        Industry, related_name="job_postings", on_delete=models.CASCADE, db_index=True
+    )
+    skills_required = models.JSONField(null=True, blank=True)
     salary_range = models.CharField(max_length=100, blank=True, null=True)
     expiration_date = models.DateTimeField(db_index=True)
     posted_at = models.DateTimeField(auto_now_add=True)
