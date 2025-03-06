@@ -3,6 +3,7 @@ from rest_framework.routers import DefaultRouter
 from rest_framework_nested.routers import NestedDefaultRouter
 from job_listings.urls import router as job_router
 from .views import (
+    ApplicationStatusViewSet,
     JobApplicationViewSet,
     JobApplicationStatusViewSet,
     JobApplicationStatusHistoryViewSet,
@@ -24,7 +25,7 @@ nested_router.register(
 # Nesting application status under applications
 nested_router.register(
     r"applications/(?P<application_id>[^/.]+)/status",
-    JobApplicationStatusViewSet,
+    ApplicationStatusViewSet,
     basename="job-application-status",
 )
 # Nesting application status history under applications

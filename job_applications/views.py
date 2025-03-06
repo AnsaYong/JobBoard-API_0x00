@@ -15,11 +15,92 @@ from permissions import IsJobBoardAdmin, IsEmployer, IsJobseeker
 
 
 class JobApplicationStatusViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet for handling CRUD operations on Job Application Statuses.
+
+    This endpoint provides access to the different statuses a job application can have, such as:
+    - "Pending"
+    - "Under Review"
+    - "Interview Scheduled"
+    - "Hired"
+    - "Rejected"
+
+    ## Example Request:
+    **GET /job-application-statuses/**
+    Example response:
+    ```json
+    [
+        {
+            "status_id": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+            "status_code": "Pending",
+            "description": "Application received and awaiting review"
+        },
+        {
+            "status_id": "a47ac10b-58cc-4372-b567-1e02b2c3d479",
+            "status_code": "Hired",
+            "description": "Candidate has been hired"
+        }
+    ]
+    ```
+
+    ## Fields:
+    - `status_id`: The unique identifier for the status.
+    - `status_code`: A short code (e.g., "Pending", "Accepted") representing the application status.
+    - `description`: A detailed explanation or description of the status.
+    """
+
+    queryset = JobApplicationStatus.objects.all()
+    serializer_class = JobApplicationStatusSerializer
+
+
+class ApplicationStatusViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet for retrieving the current status of a job application.
+
+    This endpoint is specific to a job application and allows retrieving
+    or updating the status for that application.
+
+    ## Example Request:
+    **GET /applications/12345678-abcd-1234-abcd-1234abcd5678/status/**
+    Example response:
+    ```json
+    {
+        "status_id": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+        "status_code": "Pending",
+        "description": "The application is currently under review."
+    }
+    ```
+
+    ## Example Request:
+    **POST /applications/12345678-abcd-1234-abcd-1234abcd5678/status/update/**
+    Request payload:
+    ```json
+    {
+        "status_code": "Accepted"
+    }
+    ```
+    Example response:
+    ```json
+    {
+        "message": "Status updated successfully",
+        "new_status": "Accepted"
+    }
+    ```
+
+    ## Fields:
+    - `status_code`: The new status code to update the job application
+    (e.g., "Hired", "Rejected").
+    """
+
     serializer_class = JobApplicationStatusSerializer
 
     def get_queryset(self):
         """
-        Filtering status based on the job application id
+        Filtering the status based on the job application id provided
+        in the URL path.
+
+        **GET /applications/{application_id}/status/** will return the
+        status of a specific application.
         """
         application = get_object_or_404(
             JobApplication, application_id=self.kwargs["application_id"]
@@ -30,12 +111,105 @@ class JobApplicationStatusViewSet(viewsets.ModelViewSet):
 
 
 class JobApplicationViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet for handling CRUD operations on Job Applications.
+
+    This endpoint allows job seekers to apply for jobs, and employers
+    to view, filter, and update applications.
+
+
+    ## Example Request:
+    **GET /jobs/1234/applications/**
+    Example response:
+    ```json
+    [
+        {
+            "application_id": "1bfc5d19-e3f5-4b8f-b6f7-4106b25107a5",
+            "job": 1234,
+            "job_seeker": 5678,
+            "resume_url": "http://example.com/resume.pdf",
+            "cover_letter_url": "http://example.com/cover_letter.pdf",
+            "status": {
+                "status_code": "Pending",
+                "description": "The application is currently under review."
+            },
+            "applied_at": "2025-03-01T12:00:00Z",
+            "updated_at": "2025-03-02T14:00:00Z"
+        }
+    ]
+    ```
+
+    ## Fields:
+    - `job`: The job for which the application was made (referenced by a primary key).
+    - `job_seeker`: The user who submitted the application (referenced by a primary key).
+    - `resume_url`: URL of the resume submitted by the job seeker.
+    - `cover_letter_url`: URL of the cover letter submitted by the job seeker.
+    - `status`: The current status of the application (referenced by `JobApplicationStatus`).
+    - `applied_at`: Timestamp when the application was submitted (read-only).
+    - `updated_at`: Timestamp when the application was last updated (read-only).
+
+    ## Example Request:
+    **POST /jobs/1234/applications/**
+    Request payload:
+    ```json
+    {
+        "resume_url": "http://example.com/resume.pdf",
+        "cover_letter_url": "http://example.com/cover_letter.pdf"
+    }
+    ```
+    Example response:
+    ```json
+    {
+        "application_id": "1bfc5d19-e3f5-4b8f-b6f7-4106b25107a5",
+        "job": 1234,
+        "job_seeker": 5678,
+        "resume_url": "http://example.com/resume.pdf",
+        "cover_letter_url": "http://example.com/cover_letter.pdf",
+        "status": {
+            "status_code": "Pending",
+            "description": "The application is currently under review."
+        },
+        "applied_at": "2025-03-01T12:00:00Z",
+        "updated_at": "2025-03-02T14:00:00Z"
+    }
+    ```
+
+    ## Example Request:
+    **POST /jobs/1234/applications/1bfc5d19-e3f5-4b8f-b6f7-4106b25107a5/update-status/**
+    Request payload:
+    ```json
+    {
+        "status_code": "Accepted"
+    }
+    ```
+    Example response:
+    ```json
+    {
+        "message": "Status updated successfully",
+        "new_status": "Accepted"
+    }
+    ```
+
+    ## Fields:
+    - `job`: The job associated with the application.
+    - `job_seeker`: The user who applied.
+    - `status`: The current status of the application.
+    - `applied_at`: Timestamp of the application.
+    """
 
     serializer_class = JobApplicationSerializer
 
     def get_queryset(self):
         """
-        Allows filtering of applications based on user role (job seeker or employer)
+        Filters job applications based on user role (job seeker or employer).
+
+        - Superusers can view all applications.
+        - Admins can view applications for jobs they are the employer of.
+        - Job seekers can view only their own applications.
+
+        Filters can also be applied by job ID when available in the URL path.
+
+        **GET /jobs/{job_pk}/applications/** will return job applications for a specific job.
         """
         user = self.request.user
         job_id = self.kwargs.get("job_pk")
@@ -52,8 +226,11 @@ class JobApplicationViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         """
-        Ensure the job exists, the user isn't applying to their own job,
-        and correctly associate the application with the job.
+        Ensures the job exists, the user is not applying to their own job,
+        and the application is properly associated with the job.
+
+        **POST /jobs/{job_pk}/applications/**: Creates a new job application
+        for the given job, submitted by the job seeker.
         """
         user = self.request.user
         job_id = self.kwargs.get("job_pk")
@@ -68,7 +245,20 @@ class JobApplicationViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=["post"], url_path="update-status")
     def update_status(self, request, job_pk=None, pk=None):
         """
-        Employer can update the status of a job application.
+        Employers can update the status of a job application.
+
+        **POST /applications/{application_id}/update-status/**: Allows the
+        employer to change the application status (e.g., from "Pending" to "Accepted").
+
+        ## Required Payload:
+        - `status_code`: The new status to apply to the job application
+        (e.g., "Accepted", "Rejected").
+
+        **403 Forbidden**: If the request is not made by the employer associated with the job.
+
+        ## Response:
+        - `message`: Confirmation of the status update.
+        - `new_status`: The new status code applied.
         """
         job_application = get_object_or_404(JobApplication, application_id=pk)
 
@@ -97,12 +287,58 @@ class JobApplicationViewSet(viewsets.ModelViewSet):
 
 
 class JobApplicationStatusHistoryViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet for viewing the history of status changes for a job application.
+
+    **GET /applications/{application_id}/status-history/**: Retrieve the
+    history of status changes for a specific job application.
+
+    This endpoint provides a list of all status changes, including the status
+    code, the timestamp of when the status was changed, and who changed it.
+
+    ## Example Request:
+    **GET /applications/12345678-abcd-1234-abcd-1234abcd5678/status-history/**
+    Example response:
+    ```json
+    [
+        {
+            "status_hist_id": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+            "status": {
+                "status_code": "Pending",
+                "description": "The application is currently under review."
+            },
+            "changed_at": "2025-03-01T12:00:00Z",
+            "changed_by": "employer_username"
+        },
+        {
+            "status_hist_id": "a47ac10b-58cc-4372-b567-1e02b2c3d479",
+            "status": {
+                "status_code": "Accepted",
+                "description": "The application has been accepted."
+            },
+            "changed_at": "2025-03-02T14:00:00Z",
+            "changed_by": "employer_username"
+        }
+    ]
+    ```
+
+    ## Fields:
+    - `status_hist_id`: The unique identifier for the status history record.
+    - `status`: The status that was applied (represented by a nested `JobApplicationStatus`).
+    - `changed_at`: Timestamp of when the status was changed.
+    - `changed_by`: The user who changed the status (represented by their username).
+    """
+
     serializer_class = JobApplicationStatusHistorySerializer
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
         """
-        Return the status history for a specific job application.
+        Returns the status history for a specific job application, identified
+        by the `application_id` provided in the URL path.
+
+        **GET /applications/{application_id}/status-history/** will return the
+        status change history for the application.
         """
         application_id = self.kwargs["application_id"]
         return JobApplicationStatusHistory.objects.filter(
