@@ -222,9 +222,11 @@ class JobPostingViewSet(viewsets.ModelViewSet):
         user = self.request.user
 
         if user.is_superuser:
-            return self.queryset
+            return JobPosting.objects.filter(is_active=True).order_by("-posted_at")
 
-        return self.queryset.filter(expiration_date__gte=datetime.now())
+        return JobPosting.objects.filter(is_active=True).filter(
+            expiration_date__gte=datetime.now()
+        )
 
     def perform_create(self, serializer):
         """

@@ -1,6 +1,9 @@
+from django.shortcuts import get_object_or_404
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.decorators import action
+from job_listings.models import JobPosting
 from .models import JobApplication, JobApplicationStatus, JobApplicationStatusHistory
 from .serializers import (
     JobApplicationSerializer,
@@ -11,16 +14,14 @@ from permissions import IsJobBoardAdmin, IsEmployer, IsJobseeker
 
 
 class JobApplicationStatusViewSet(viewsets.ModelViewSet):
-    queryset = JobApplicationStatus.objects.all()
     serializer_class = JobApplicationStatusSerializer
-    permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
         """
         Filtering status based on the job application id
         """
         application_id = self.kwargs["application_id"]
-        return JobApplicationStatus.objects.filter(job_application_id=application_id)
+        return JobApplicationStatus.objects.filter(application_id=application_id)
 
     @action(detail=True, methods=["post"], url_path="update")
     def update_status(self, request, job_id=None, application_id=None):
@@ -49,26 +50,43 @@ class JobApplicationStatusViewSet(viewsets.ModelViewSet):
 
 
 class JobApplicationViewSet(viewsets.ModelViewSet):
-    queryset = JobApplication.objects.all()
+
     serializer_class = JobApplicationSerializer
-    permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
         """
         Allows filtering of applications based on user role (job seeker or employer)
         """
         user = self.request.user
-        if user.is_staff:  # Admin or Employer can see all applications
-            return JobApplication.objects.all()
-        elif user.is_employer:
-            return JobApplication.objects.filter(job__employer=user)
-        return JobApplication.objects.filter(
-            job_seeker=user
-        )  # Job Seekers can see their own applications
+        job_id = self.kwargs.get("job_pk")
+        if job_id:
+            queryset = JobApplication.objects.filter(job_id=job_id)
+
+        if user.is_superuser:
+            return queryset
+
+        if user.role == "admin":
+            return queryset.filter(job__employer=user)
+
+        return queryset.filter(job_seeker=user)
+
+    def perform_create(self, serializer):
+        """
+        Ensure the job exists, the user isn't applying to their own job,
+        and correctly associate the application with the job.
+        """
+        user = self.request.user
+        job_id = self.kwargs.get("job_pk")
+
+        job = get_object_or_404(JobPosting, job_id=job_id)
+
+        if job.employer == user:
+            raise PermissionDenied("Employer cannot apply to their own job listing.")
+
+        serializer.save(job=job, job_seeker=user)
 
 
 class JobApplicationStatusHistoryViewSet(viewsets.ModelViewSet):
-    queryset = JobApplicationStatusHistory.objects.all()
     serializer_class = JobApplicationStatusHistorySerializer
     permission_classes = [IsAuthenticated]
 

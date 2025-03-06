@@ -14,18 +14,20 @@ router.register(
     r"statuses", JobApplicationStatusViewSet, basename="job-application-status"
 )
 
-# Nest application under jobs
 nested_router = NestedDefaultRouter(job_router, r"jobs", lookup="job")
+
+# Nesting application under jobs
 nested_router.register(
     r"applications", JobApplicationViewSet, basename="job-application"
 )
 
+# Nesting application status under applications
 nested_router.register(
     r"applications/(?P<application_id>[^/.]+)/status",
     JobApplicationStatusViewSet,
     basename="job-application-status",
 )
-
+# Nesting application status history under applications
 nested_router.register(
     r"applications/(?P<application_id>[^/.]+)/status-history",
     JobApplicationStatusHistoryViewSet,

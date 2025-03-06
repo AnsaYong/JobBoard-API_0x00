@@ -1,5 +1,9 @@
 from rest_framework import serializers
+from django.contrib.auth import get_user_model
+from job_listings.models import JobPosting
 from .models import JobApplication, JobApplicationStatus, JobApplicationStatusHistory
+
+User = get_user_model()
 
 
 class JobApplicationStatusSerializer(serializers.ModelSerializer):
@@ -9,9 +13,11 @@ class JobApplicationStatusSerializer(serializers.ModelSerializer):
 
 
 class JobApplicationSerializer(serializers.ModelSerializer):
-    job = serializers.StringRelatedField()
-    job_seeker = serializers.StringRelatedField()
-    status = JobApplicationStatusSerializer()
+    job = serializers.PrimaryKeyRelatedField(read_only=True)
+    job_seeker = serializers.PrimaryKeyRelatedField(read_only=True)
+    status = serializers.PrimaryKeyRelatedField(
+        queryset=JobApplicationStatus.objects.all(), required=False
+    )
 
     class Meta:
         model = JobApplication
@@ -25,6 +31,7 @@ class JobApplicationSerializer(serializers.ModelSerializer):
             "applied_at",
             "updated_at",
         ]
+        read_only_fields = ["application_id", "applied_at", "updated_at"]
 
 
 class JobApplicationStatusHistorySerializer(serializers.ModelSerializer):

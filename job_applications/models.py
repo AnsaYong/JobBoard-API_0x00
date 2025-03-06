@@ -49,6 +49,7 @@ class JobApplication(models.Model):
         indexes = [
             models.Index(fields=["job", "job_seeker"]),
         ]
+        ordering = ["-applied_at"]
 
     def __str__(self):
         return f"{self.job.title} - {self.job_seeker.username}"

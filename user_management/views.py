@@ -64,7 +64,7 @@ class RegisterView(generics.CreateAPIView):
         }
     """
 
-    queryset = User.objects.all()
+    # queryset = User.objects.all()
     serializer_class = RegisterSerializer
     permission_classes = [permissions.AllowAny]
 
@@ -171,8 +171,6 @@ class LogoutView(APIView):
     This endpoint invalidates the refresh token by blacklisting it, rendering it unusable for future requests.
     Users must provide their refresh token to log out.
     """
-
-    permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request):
         """
@@ -349,7 +347,6 @@ class PasswordChangeView(generics.UpdateAPIView):
     """
 
     serializer_class = PasswordChangeSerializer
-    permission_classes = [permissions.IsAuthenticated]
 
     def update(self, request, *args, **kwargs):
         serializer = self.get_serializer(
@@ -485,6 +482,7 @@ class UserView(viewsets.ModelViewSet):
 
         if user.is_superuser or user.role == "admin":
             return User.objects.all()
+
         return User.objects.filter(user_id=user.user_id)
 
     @action(
