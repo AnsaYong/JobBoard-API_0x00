@@ -39,7 +39,11 @@ class JobApplication(models.Model):
     resume_url = models.TextField()
     cover_letter_url = models.TextField()
     status = models.ForeignKey(
-        JobApplicationStatus, on_delete=models.SET_NULL, null=True, blank=True
+        JobApplicationStatus,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="applications",
     )
     applied_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -50,6 +54,18 @@ class JobApplication(models.Model):
             models.Index(fields=["job", "job_seeker"]),
         ]
         ordering = ["-applied_at"]
+
+    def save(self, *args, **kwargs):
+        """
+        Assign a default status ('Pending') when a new application is created.
+        """
+        if not self.status:
+            pending_status = JobApplicationStatus.objects.filter(
+                status_code="Pending"
+            ).first()
+            if pending_status:
+                self.status = pending_status
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.job.title} - {self.job_seeker.username}"
