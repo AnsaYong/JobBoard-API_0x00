@@ -1,15 +1,10 @@
 from rest_framework import serializers
-from .models import JobPosting, Industry, Location
+from .models import Industry, Location, Skill, JobPosting
 
 
 class IndustrySerializer(serializers.ModelSerializer):
     """
     Serializer for the Industry model.
-
-    Serializes data for creating and updating industries, as well as reading industry information.
-
-    Attributes:
-        name (str): The name of the industry.
 
     Methods:
         create: Create a new industry.
@@ -25,25 +20,48 @@ class LocationSerializer(serializers.ModelSerializer):
     """
     Serializer for the Location model.
 
-    Serializes data for creating and updating locations, as well as reading location information.
-
-    Attributes:
-        city (str): The city of the location.
-        country (str): The country of the location.
-
     Methods:
         create: Create a new location.
-        update: Update an existing location.
+        update: Update an existing location
     """
 
     class Meta:
         model = Location
-        fields = ["location_id", "city", "country"]
+        fields = ["location_id", "city", "postal_code", "state_or_province", "country"]
+
+
+class SkillSerializer(serializers.ModelSerializer):
+    """
+    Serializer for the Skill model.
+
+    Methods:
+        create: Create a new skill.
+        update: Update an existing skill.
+    """
+
+    class Meta:
+        model = Skill
+        fields = ["skill_id", "name"]
 
 
 class JobPostingSerializer(serializers.ModelSerializer):
-    industry = serializers.PrimaryKeyRelatedField(queryset=Industry.objects.all())
-    location = serializers.PrimaryKeyRelatedField(queryset=Location.objects.all())
+    """
+    Serializer for the JobPosting model with support for both UUID and string-based
+    input for location and industry.
+
+    Attributes:
+        - employer (PrimaryKeyRelatedField): The employer of the job posting.
+        Auto-assgined from request user
+    Nested Serializers:
+        - location (LocationSerializer): The location of the job posting.
+        - industry (IndustrySerializer): The industry of the job posting.
+        - skills_required (SkillSerializer): The skills required. Many-to-many relationship.
+    """
+
+    employer = serializers.PrimaryKeyRelatedField(read_only=True)
+    location = LocationSerializer()
+    industry = IndustrySerializer()
+    skills_required = SkillSerializer(many=True)
 
     class Meta:
         model = JobPosting
@@ -51,62 +69,43 @@ class JobPostingSerializer(serializers.ModelSerializer):
             "job_id",
             "employer",
             "title",
+            "slug",
             "description",
             "job_type",
             "location",
             "industry",
             "skills_required",
-            "salary_range",
+            "salary_min",
+            "salary_max",
+            "currency",
             "expiration_date",
             "posted_at",
             "updated_at",
+            "is_active",
         ]
-        read_only_fields = ["job_id", "employer", "posted_at", "updated_at"]
-
-    def validate(self, attrs):
-        print("In Serializer validate method")
-        location_data = attrs.get("location", None)
-        industry_data = attrs.get("industry", None)
-
-        if not location_data:
-            raise serializers.ValidationError("Location is required")
-
-        if not industry_data:
-            raise serializers.ValidationError("Industry is required")
-
-        return attrs
+        read_only_fields = [
+            "job_id",
+            "employer",
+            "posted_at",
+            "updated_at",
+        ]
 
     def create(self, validated_data):
-        print("In Serializer create method")
-        location_data = validated_data.get("location", None)
-        industry_data = validated_data.get("industry", None)
+        """Create a new job posting with related location and industry"""
+        location_data = validated_data.pop("location")
+        industry_data = validated_data.pop("industry")
+        skills_data = validated_data.pop("skills_required", [])
 
-        # If location is a string (user-typed), create or fetch the Location
-        if isinstance(location_data, str):
-            location_data = Location.objects.get_or_create(city=location_data)[0]
+        # Create or get related objects
+        location, _ = Location.objects.get_or_create(**location_data)
+        industry, _ = Industry.objects.get_or_create(**industry_data)
+        job_posting = JobPosting.objects.create(
+            location=location, industry=industry, **validated_data
+        )
 
-        # If industry is a string (user-typed), create or fetch the Industry
-        if isinstance(industry_data, str):
-            industry_data = Industry.objects.get_or_create(name=industry_data)[0]
+        # Add skills
+        for skill_data in skills_data:
+            skill, _ = Skill.objects.get_or_create(**skill_data)
+            job_posting.skills_required.add(skill)
 
-        validated_data["location"] = location_data
-        validated_data["industry"] = industry_data
-
-        job_posting = JobPosting.objects.create(**validated_data)
         return job_posting
-
-    def update(self, instance, validated_data):
-        location_data = validated_data.get("location", instance.location)
-        industry_data = validated_data.get("industry", instance.industry)
-
-        if isinstance(location_data, str):
-            location_data = Location.objects.get_or_create(city=location_data)[0]
-
-        if isinstance(industry_data, str):
-            industry_data = Industry.objects.get_or_create(name=industry_data)[0]
-
-        instance.location = location_data
-        instance.industry = industry_data
-
-        instance.save()
-        return instance

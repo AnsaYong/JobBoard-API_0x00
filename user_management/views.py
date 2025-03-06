@@ -34,11 +34,14 @@ class RegisterView(generics.CreateAPIView):
     - `email`: (string) Required. User's email address.
     - `first_name`: (string) Required. User's first name.
     - `last_name`: (string) Required. User's last name.
+    - `role`: (string) Optional. User's role (jobseeker, employer, admin).
     - `password`: (string) Required. User's password (will be hashed).
+    - `password2`: (string) Required. Confirm the password.
 
     **Response:**
     - `message`: (string) Success message.
-    - `data`: (object) Contains user registration details, including `user_id`, `email`, `first_name`, and `last_name`.
+    - `data`: (object) Contains user registration details, including
+    `email`, `first_name`, `last_name`, and `role`.
 
     **Responses:**
     - **201 Created**:
