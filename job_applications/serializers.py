@@ -15,9 +15,7 @@ class JobApplicationStatusSerializer(serializers.ModelSerializer):
 class JobApplicationSerializer(serializers.ModelSerializer):
     job = serializers.PrimaryKeyRelatedField(read_only=True)
     job_seeker = serializers.PrimaryKeyRelatedField(read_only=True)
-    status = serializers.PrimaryKeyRelatedField(
-        queryset=JobApplicationStatus.objects.all(), required=False
-    )
+    status = JobApplicationStatusSerializer(read_only=True)
 
     class Meta:
         model = JobApplication

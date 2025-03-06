@@ -17,6 +17,7 @@ class JobApplicationStatus(models.Model):
 
     class Meta:
         verbose_name_plural = "Job Application Statuses"
+        ordering = ["status_code"]
 
     def __str__(self):
         return self.status_code

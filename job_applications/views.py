@@ -66,7 +66,7 @@ class JobApplicationViewSet(viewsets.ModelViewSet):
         serializer.save(job=job, job_seeker=user)
 
     @action(detail=True, methods=["post"], url_path="update-status")
-    def update_status(self, request, pk=None):
+    def update_status(self, request, job_pk=None, pk=None):
         """
         Employer can update the status of a job application.
         """
