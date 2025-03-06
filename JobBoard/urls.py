@@ -41,18 +41,12 @@ urlpatterns = [
         "swagger/",
         schema_view.with_ui("swagger", cache_timeout=0),
         name="schema-swagger-ui",
-    ),  # Swagger UI (default)
-    path(
-        "redoc/", schema_view.with_ui("redoc", cache_timeout=0), name="schema-redoc"
-    ),  # Redoc (alternative documentation UI)
-    path(
-        "swagger.json", schema_view.without_ui(cache_timeout=0), name="schema-json"
-    ),  # Raw OpenAPI schema in JSON format
-    path(
-        "swagger.yaml", schema_view.without_ui(cache_timeout=0), name="schema-yaml"
-    ),  # Raw OpenAPI schema in YAML format
+    ),
+    path("redoc/", schema_view.with_ui("redoc", cache_timeout=0), name="schema-redoc"),
+    path("swagger.json", schema_view.without_ui(cache_timeout=0), name="schema-json"),
+    path("swagger.yaml", schema_view.without_ui(cache_timeout=0), name="schema-yaml"),
     path("admin/", admin.site.urls),
     path("api/users/", include("user_management.urls")),
-    path("api/jobs/", include("job_listings.urls")),
-    path("api/applications/", include("job_applications.urls")),
+    path("api/", include("job_listings.urls")),
+    path("api/", include("job_applications.urls")),
 ]

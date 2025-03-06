@@ -27,7 +27,7 @@ class JobApplication(models.Model):
     Model to store the job applications
     """
 
-    job_application_id = models.UUIDField(
+    application_id = models.UUIDField(
         primary_key=True, default=uuid.uuid4, editable=False
     )
     job = models.ForeignKey(
