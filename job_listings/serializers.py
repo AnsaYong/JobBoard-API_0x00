@@ -5,10 +5,6 @@ from .models import Industry, Location, Skill, JobPosting
 class IndustrySerializer(serializers.ModelSerializer):
     """
     Serializer for the Industry model.
-
-    Methods:
-        create: Create a new industry.
-        update: Update an existing industry.
     """
 
     class Meta:
@@ -19,10 +15,6 @@ class IndustrySerializer(serializers.ModelSerializer):
 class LocationSerializer(serializers.ModelSerializer):
     """
     Serializer for the Location model.
-
-    Methods:
-        create: Create a new location.
-        update: Update an existing location
     """
 
     class Meta:
@@ -33,10 +25,6 @@ class LocationSerializer(serializers.ModelSerializer):
 class SkillSerializer(serializers.ModelSerializer):
     """
     Serializer for the Skill model.
-
-    Methods:
-        create: Create a new skill.
-        update: Update an existing skill.
     """
 
     class Meta:
@@ -46,16 +34,13 @@ class SkillSerializer(serializers.ModelSerializer):
 
 class JobPostingSerializer(serializers.ModelSerializer):
     """
-    Serializer for the JobPosting model with support for both UUID and string-based
-    input for location and industry.
+    Serializer for the JobPosting model with dynamic creation of related fields.
 
-    Attributes:
-        - employer (PrimaryKeyRelatedField): The employer of the job posting.
-        Auto-assgined from request user
-    Nested Serializers:
-        - location (LocationSerializer): The location of the job posting.
-        - industry (IndustrySerializer): The industry of the job posting.
-        - skills_required (SkillSerializer): The skills required. Many-to-many relationship.
+    Fields:
+        - employer (PrimaryKeyRelatedField): Auto-assigned from request user.
+        - location (LocationSerializer): Allows nested location creation.
+        - industry (IndustrySerializer): Allows nested industry creation.
+        - skills_required (SkillSerializer): Many-to-many relationship.
     """
 
     employer = serializers.PrimaryKeyRelatedField(read_only=True)
@@ -91,21 +76,31 @@ class JobPostingSerializer(serializers.ModelSerializer):
         ]
 
     def create(self, validated_data):
-        """Create a new job posting with related location and industry"""
+        """Create a new job posting while ensuring related objects are properly handled."""
         location_data = validated_data.pop("location")
         industry_data = validated_data.pop("industry")
         skills_data = validated_data.pop("skills_required", [])
 
-        # Create or get related objects
-        location, _ = Location.objects.get_or_create(**location_data)
-        industry, _ = Industry.objects.get_or_create(**industry_data)
+        # Get or create location
+        location, _ = Location.objects.get_or_create(
+            city=location_data["city"],
+            state_or_province=location_data.get("state_or_province", ""),
+            country=location_data["country"],
+        )
+
+        # Get or create industry
+        industry, _ = Industry.objects.get_or_create(name=industry_data["name"])
+
+        # Create job posting
         job_posting = JobPosting.objects.create(
             location=location, industry=industry, **validated_data
         )
 
-        # Add skills
+        # Add skills (efficiently handling get_or_create)
+        skill_instances = []
         for skill_data in skills_data:
-            skill, _ = Skill.objects.get_or_create(**skill_data)
-            job_posting.skills_required.add(skill)
+            skill, _ = Skill.objects.get_or_create(name=skill_data["name"])
+            skill_instances.append(skill)
+        job_posting.skills_required.set(skill_instances)
 
         return job_posting

@@ -1,6 +1,7 @@
 from datetime import datetime
 from rest_framework import viewsets, permissions
 from django_filters import rest_framework as filters
+from django.db.models import Q
 from .models import JobPosting, Location, Industry, Skill
 from .serializers import (
     JobPostingSerializer,
@@ -14,14 +15,13 @@ from permissions import IsJobseeker, IsEmployer, IsJobBoardAdmin
 
 class IndustryViewSet(viewsets.ModelViewSet):
     """
-    API endpoint to manage industries.
+    API endpoint to manage industries with search support.
 
-    ## Endpoints:
-    - `GET /industries/` → List all industries
-    - `POST /industries/` → Create a new industry
-    - `GET /industries/{id}/` → Retrieve an industry by ID
-    - `PUT /industries/{id}/` → Update an industry
-    - `DELETE /industries/{id}/` → Delete an industry
+    ## Search:
+    Example: `GET /industries/?search=Technology`
+    You can search for industries based on the `name` attribute.
+    This can be used to integrate a search-as-you-type functionality
+    on the frontend.
 
     ## Permissions:
     - Read: **Open to everyone**
@@ -30,19 +30,36 @@ class IndustryViewSet(viewsets.ModelViewSet):
 
     queryset = Industry.objects.all()
     serializer_class = IndustrySerializer
-    # permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.AllowAny]
+
+    def get_queryset(self):
+        """
+        Returns the queryset for industries based on the search query.
+
+        If a search query is provided, it filters the industries based
+        on the query. Otherwise, it returns all industries.
+
+        Returns:
+        - **Industry queryset**: A filtered queryset based on the search query.
+        """
+        search_query = self.request.query_params.get("search", None)
+        queryset = super().get_queryset()
+
+        if search_query:
+            return queryset.filter(name__icontains=search_query)
+
+        return queryset
 
 
 class LocationViewSet(viewsets.ModelViewSet):
     """
-    API endpoint to manage job locations.
+    API endpoint to manage job locations with search support.
 
-    ## Endpoints:
-    - `GET /locations/` → List all locations
-    - `POST /locations/` → Create a new location
-    - `GET /locations/{id}/` → Retrieve a location by ID
-    - `PUT /locations/{id}/` → Update a location
-    - `DELETE /locations/{id}/` → Delete a location
+    ## Search:
+    Example: `GET /locations/?search=Johannesburg`
+    You can search for locations based on the `city`, `postal_code`,
+    `state_or_province`, and `country`. This can be used to integrate
+    a search-as-you-type functionality on the frontend.
 
     ## Permissions:
     - Read: **Open to everyone**
@@ -51,19 +68,40 @@ class LocationViewSet(viewsets.ModelViewSet):
 
     queryset = Location.objects.all()
     serializer_class = LocationSerializer
-    # permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        """
+        Returns the queryset for job locations based on the search query.
+
+        If a search query is provided, it filters the locations based on the query.
+        Otherwise, it returns all locations.
+
+        Returns:
+        - **Location queryset**: A filtered queryset based on the search query.
+        """
+        search_query = self.request.query_params.get("search", None)
+        queryset = super().get_queryset()
+
+        if search_query:
+            return queryset.filter(
+                Q(city__icontains=search_query)
+                | Q(postal_code__icontains=search_query)
+                | Q(state_or_province__icontains=search_query)
+                | Q(country__icontains=search_query)
+            )
+
+        return queryset
 
 
 class SkillViewSet(viewsets.ModelViewSet):
     """
-    API endpoint to manage job-related skills.
+    API endpoint to manage job-related skills with search support.
 
-    ## Endpoints:
-    - `GET /skills/` → List all skills
-    - `POST /skills/` → Create a new skill
-    - `GET /skills/{id}/` → Retrieve a skill by ID
-    - `PUT /skills/{id}/` → Update a skill
-    - `DELETE /skills/{id}/` → Delete a skill
+    ## Search:
+    Example: `GET /skills/?search=Python`
+    You can search for skills based on the `name` attribute.
+    This can be used to integrate a search-as-you-type functionality
+    on the frontend.
 
     ## Permissions:
     - Read: **Open to everyone**
@@ -72,7 +110,25 @@ class SkillViewSet(viewsets.ModelViewSet):
 
     queryset = Skill.objects.all()
     serializer_class = SkillSerializer
-    # permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.AllowAny]
+
+    def get_queryset(self):
+        """
+        Returns the queryset for skills based on the search query.
+
+        If a search query is provided, it filters the skills based on the query.
+        Otherwise, it returns all skills.
+
+        Returns:
+        - **Skill queryset**: A filtered queryset based on the search query.
+        """
+        search_query = self.request.query_params.get("search", None)
+        queryset = super().get_queryset()
+
+        if search_query:
+            return queryset.filter(name__icontains=search_query)
+
+        return queryset
 
 
 class JobPostingViewSet(viewsets.ModelViewSet):

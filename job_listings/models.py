@@ -59,8 +59,9 @@ class Location(models.Model):
         verbose_name = "Job Location"
         verbose_name_plural = "Job Locations"
         indexes = [
-            models.Index(fields=["city"]),
-            models.Index(fields=["country"]),
+            models.Index(
+                fields=["city", "country", "state_or_province", "postal_code"]
+            ),
         ]
         ordering = ["city", "country"]
 
@@ -92,6 +93,7 @@ class Skill(models.Model):
         ordering = ["name"]
 
     def __str__(self):
+        """Return the name of the skill as string representation."""
         return self.name
 
 
