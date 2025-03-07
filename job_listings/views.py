@@ -1,7 +1,9 @@
 from datetime import datetime
 from rest_framework import viewsets, permissions
-from django_filters import rest_framework as filters
 from django.db.models import Q
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import filters
+from django.contrib.postgres.search import SearchVector, SearchQuery, SearchRank
 from .models import JobPosting, Location, Industry, Skill
 from .serializers import (
     JobPostingSerializer,
@@ -17,7 +19,7 @@ class IndustryViewSet(viewsets.ModelViewSet):
     """
     API endpoint to manage industries with search support.
 
-    ## Search:
+    ## Search & Filter:
     Example: `GET /industries/?search=Technology`
     You can search for industries based on the `name` attribute.
     This can be used to integrate a search-as-you-type functionality
@@ -55,7 +57,7 @@ class LocationViewSet(viewsets.ModelViewSet):
     """
     API endpoint to manage job locations with search support.
 
-    ## Search:
+    ## Search & Filter:
     Example: `GET /locations/?search=Johannesburg`
     You can search for locations based on the `city`, `postal_code`,
     `state_or_province`, and `country`. This can be used to integrate
@@ -97,7 +99,7 @@ class SkillViewSet(viewsets.ModelViewSet):
     """
     API endpoint to manage job-related skills with search support.
 
-    ## Search:
+    ## Search & Filter:
     Example: `GET /skills/?search=Python`
     You can search for skills based on the `name` attribute.
     This can be used to integrate a search-as-you-type functionality
@@ -135,8 +137,8 @@ class JobPostingViewSet(viewsets.ModelViewSet):
     """
     API endpoint to create and manage job postings.
 
-    It supports filtering job postings based on various attributes such
-    as job title, location, industry, job type, and expiration date.
+    It supports job filtering by category (location, industry, job_type),
+    and full-text search on the job title and description.
 
     **Permissions**:
     - **List/Read**: Available to Job Seekers, Employers, and Admins.
@@ -221,12 +223,17 @@ class JobPostingViewSet(viewsets.ModelViewSet):
     ```
 
     **Filtering:**
-    You can filter job postings based on `title`, `location`, `industry`,
-    `job_type`, and `expiration_date` using query parameters.
+    Users can filter by `location`, `industry`, and `job_type`
+    using query parameters.
     - `GET /jobs/?industry={industry_id}` → Filter jobs by industry
     - `GET /jobs/?location={location_id}` → Filter jobs by location
     - `GET /jobs/?job_type={job_type}` → Filter jobs by job type
+    - `GET /jobs/?industry=tech&location=1&job_type=full-time` → Combined filter
 
+    **Searching:**
+    Users can search using keywords in `title` and `description`
+    - `GET /jobs/?search=Python` → Search for jobs with "Python" in the title or description
+    - `GET /jobs/?search=python%20developer` → Search for jobs with "python" and "developer"
 
     **Permissions:**
     - **Superuser**: Full access to all job postings.
@@ -236,11 +243,19 @@ class JobPostingViewSet(viewsets.ModelViewSet):
 
     """
 
-    queryset = JobPosting.objects.filter(is_active=True).order_by("-posted_at")
+    queryset = JobPosting.objects.all().order_by("-posted_at")
     serializer_class = JobPostingSerializer
 
-    filter_backends = (filters.DjangoFilterBackend,)
+    filter_backends = (
+        DjangoFilterBackend,
+        filters.SearchFilter,
+        filters.OrderingFilter,
+    )
     filterset_class = JobPostingFilter
+
+    search_fields = ["title", "description"]  # Full-text search
+    filterset_fields = ["location", "industry", "job_type"]  # Filtering
+    ordering_fields = ["posted_at", "expiration_date"]  # Ordering
 
     def get_permissions(self):
         """
@@ -275,14 +290,26 @@ class JobPostingViewSet(viewsets.ModelViewSet):
         Returns:
         - **Job Posting queryset**: A filtered queryset based on the user's role and expiration date.
         """
+        queryset = super().get_queryset()
         user = self.request.user
 
-        if user.is_superuser:
-            return JobPosting.objects.filter(is_active=True).order_by("-posted_at")
+        if user.role == "employer":
+            queryset = queryset.filter(employer=user)
 
-        return JobPosting.objects.filter(is_active=True).filter(
-            expiration_date__gte=datetime.now()
-        )
+        if user.role == "jobseeker":
+            queryset = queryset.filter(is_active=True).filter(
+                expiration_date__gte=datetime.now()
+            )
+
+        search_query = self.request.query_params.get("search", None)
+        if search_query:
+            search_vector = SearchVector("title", "description")
+            search_query = SearchQuery(search_query)
+            queryset = queryset.annotate(
+                rank=SearchRank(search_vector, search_query)
+            ).filter(rank__gte=0.3)
+
+        return queryset.order_by("-posted_at")
 
     def perform_create(self, serializer):
         """
@@ -294,7 +321,6 @@ class JobPostingViewSet(viewsets.ModelViewSet):
         Arguments:
         - **serializer**: The validated data for the job posting.
         """
-        print("In perform_create method")
         serializer.save(employer=self.request.user)
 
     def delete(self, request, *args, **kwargs):
