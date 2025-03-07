@@ -97,6 +97,10 @@ class JobApplication(models.Model):
                 self.status = pending_status
         super().save(*args, **kwargs)
 
+    def get_status_display(self):
+        """Return the status code of the application."""
+        return self.status.job_status_code if self.status else None
+
     def __str__(self):
         """Return the job title and jobseeker's name as a string representation."""
         return f"{self.job.title} - {self.job_seeker.first_name}"
