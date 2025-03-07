@@ -68,11 +68,10 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = "JobBoard.urls"
 
-# Rest Framework and JWT Configuration
+# Rest Framework Configuration
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
-        "rest_framework.authentication.SessionAuthentication",  # for browser-based login sessions
-        # "rest_framework.authentication.BasicAuthentication",  # for simple username/password authentication
+        "rest_framework.authentication.SessionAuthentication",  # for session-based authentication
         "rest_framework_simplejwt.authentication.JWTAuthentication",  # for JWT tokens
         "rest_framework.authentication.TokenAuthentication",  # for Django's built-in token authentication
     ),
@@ -86,6 +85,7 @@ REST_FRAMEWORK = {
     "PAGE_SIZE": 10,  # Default page size for paginated responses
 }
 
+# JWT Configuration
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(
         hours=int(env("ACCESS_TOKEN_LIFETIME_HOURS", default=1))
@@ -130,6 +130,16 @@ CORS_ALLOW_HEADERS = [
 
 # Email Configuration for Console Backend
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+
+# Email Configuration for SMTP Backend
+DEFAULT_FROM_EMAIL = env(
+    "DEFAULT_FROM_EMAIL", default="notifications@ansa-jobboard.com"
+)
+
+# Celery Configuration
+CELERY_BROKER_URL = "redis://localhost:6379/0"
+CELERY_ACCEPT_CONTENT = ["json"]
+CELERY_TASK_SERIALIZER = "json"
 
 TEMPLATES = [
     {

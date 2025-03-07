@@ -5,7 +5,6 @@ from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from job_listings.models import JobPosting
-from shared.viewsets import BaseViewSet
 from .models import JobApplication, JobApplicationStatus, JobApplicationStatusHistory
 from .serializers import (
     JobApplicationSerializer,
@@ -17,9 +16,10 @@ from permissions import IsJobBoardAdmin, IsEmployer, IsJobseeker
 
 class JobApplicationStatusViewSet(viewsets.ModelViewSet):
     """
-    ViewSet for handling CRUD operations on Job Application Statuses.
+    ViewSet for managing the job application statuses.
 
-    This endpoint provides access to the different statuses a job application can have, such as:
+    This endpoint provides access to the different statuses
+    a job application can have, such as:
     - "Pending"
     - "Under Review"
     - "Interview Scheduled"
@@ -27,7 +27,7 @@ class JobApplicationStatusViewSet(viewsets.ModelViewSet):
     - "Rejected"
 
     ## Example Request:
-    **GET /job-application-statuses/**
+    **GET api/statuses/**
     Example response:
     ```json
     [

@@ -42,3 +42,4 @@ class JobApplicationsConfig(AppConfig):
 
     def ready(self):
         post_migrate.connect(create_default_statuses, sender=self)
+        import job_applications.signals
