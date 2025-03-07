@@ -12,7 +12,7 @@ class JobApplicationStatusSerializer(serializers.ModelSerializer):
 
     This serializer represents the status of a job application. It includes:
     - `status_id`: The unique identifier for the status.
-    - `status_code`: A short code (such as "Pending", "Accepted", etc.) representing the status.
+    - `job_status_code`: A short code (such as "Pending", "Accepted", etc.) representing the status.
     - `description`: A detailed explanation or description of the status.
 
     Used to fetch or serialize details of the job application status in the API responses.
@@ -20,7 +20,7 @@ class JobApplicationStatusSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = JobApplicationStatus
-        fields = ["status_id", "status_code", "description"]
+        fields = ["status_id", "job_status_code", "description"]
 
 
 class JobApplicationSerializer(serializers.ModelSerializer):

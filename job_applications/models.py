@@ -16,23 +16,23 @@ class JobApplicationStatus(models.Model):
 
     Attributes:
         - `status_id` (UUIDField): The unique identifier for the status.
-        - `status_code` (CharField): A unique code representing the status
+        - `job_status_code` (CharField): A unique code representing the status
         (e.g., "Pending", "Accepted").
         - `description` (CharField): A textual description of the status
         (e.g., "Application is currently under review").
     """
 
     status_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    status_code = models.CharField(max_length=50, unique=True)
+    job_status_code = models.CharField(max_length=50, unique=True)
     description = models.CharField(max_length=255)
 
     class Meta:
         verbose_name_plural = "Job Application Statuses"
-        ordering = ["status_code"]
+        ordering = ["job_status_code"]
 
     def __str__(self):
         """Return the status code as the string representation of the object."""
-        return self.status_code
+        return self.job_status_code
 
 
 class JobApplication(models.Model):
@@ -91,7 +91,7 @@ class JobApplication(models.Model):
         """
         if not self.status:
             pending_status = JobApplicationStatus.objects.filter(
-                status_code="Pending"
+                job_status_code="Pending"
             ).first()
             if pending_status:
                 self.status = pending_status
@@ -136,4 +136,4 @@ class JobApplicationStatusHistory(models.Model):
         Return the job title, status code and date status was changed as a
         string representation of the status change history entry.
         """
-        return f"{self.job_application.job.title} - {self.status.status_code} at {self.changed_at}"
+        return f"{self.job_application.job.title} - {self.status.job_status_code} at {self.changed_at}"

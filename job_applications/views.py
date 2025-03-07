@@ -1,10 +1,11 @@
 from django.shortcuts import get_object_or_404
-from rest_framework import viewsets
+from rest_framework import viewsets, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from job_listings.models import JobPosting
+from shared.viewsets import BaseViewSet
 from .models import JobApplication, JobApplicationStatus, JobApplicationStatusHistory
 from .serializers import (
     JobApplicationSerializer,
@@ -32,12 +33,12 @@ class JobApplicationStatusViewSet(viewsets.ModelViewSet):
     [
         {
             "status_id": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
-            "status_code": "Pending",
+            "job_status_code": "Pending",
             "description": "Application received and awaiting review"
         },
         {
             "status_id": "a47ac10b-58cc-4372-b567-1e02b2c3d479",
-            "status_code": "Hired",
+            "job_status_code": "Hired",
             "description": "Candidate has been hired"
         }
     ]
@@ -45,7 +46,7 @@ class JobApplicationStatusViewSet(viewsets.ModelViewSet):
 
     ## Fields:
     - `status_id`: The unique identifier for the status.
-    - `status_code`: A short code (e.g., "Pending", "Accepted") representing the application status.
+    - `job_status_code`: A short code (e.g., "Under Review", "Hired") representing the application status.
     - `description`: A detailed explanation or description of the status.
     """
 
@@ -66,7 +67,7 @@ class ApplicationStatusViewSet(viewsets.ModelViewSet):
     ```json
     {
         "status_id": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
-        "status_code": "Pending",
+        "job_status_code": "Pending",
         "description": "The application is currently under review."
     }
     ```
@@ -76,7 +77,7 @@ class ApplicationStatusViewSet(viewsets.ModelViewSet):
     Request payload:
     ```json
     {
-        "status_code": "Accepted"
+        "job_status_code": "Hired"
     }
     ```
     Example response:
@@ -88,10 +89,11 @@ class ApplicationStatusViewSet(viewsets.ModelViewSet):
     ```
 
     ## Fields:
-    - `status_code`: The new status code to update the job application
+    - `job_status_code`: The new status code to update the job application
     (e.g., "Hired", "Rejected").
     """
 
+    queryset = JobApplicationStatus.objects.all()
     serializer_class = JobApplicationStatusSerializer
 
     def get_queryset(self):
@@ -102,12 +104,14 @@ class ApplicationStatusViewSet(viewsets.ModelViewSet):
         **GET /applications/{application_id}/status/** will return the
         status of a specific application.
         """
-        application = get_object_or_404(
-            JobApplication, application_id=self.kwargs["application_id"]
-        )
-        return JobApplicationStatus.objects.filter(
-            status_id=application.status.status_id
-        )
+        queryset = super().get_queryset()
+
+        application_id = self.kwargs.get("application_pk")
+        if application_id:
+            application = get_object_or_404(
+                JobApplication, application_id=application_id
+            )
+            return queryset.filter(status_id=application.status.status_id)
 
 
 class JobApplicationViewSet(viewsets.ModelViewSet):
@@ -130,7 +134,7 @@ class JobApplicationViewSet(viewsets.ModelViewSet):
             "resume_url": "http://example.com/resume.pdf",
             "cover_letter_url": "http://example.com/cover_letter.pdf",
             "status": {
-                "status_code": "Pending",
+                "job_status_code": "Pending",
                 "description": "The application is currently under review."
             },
             "applied_at": "2025-03-01T12:00:00Z",
@@ -138,15 +142,6 @@ class JobApplicationViewSet(viewsets.ModelViewSet):
         }
     ]
     ```
-
-    ## Fields:
-    - `job`: The job for which the application was made (referenced by a primary key).
-    - `job_seeker`: The user who submitted the application (referenced by a primary key).
-    - `resume_url`: URL of the resume submitted by the job seeker.
-    - `cover_letter_url`: URL of the cover letter submitted by the job seeker.
-    - `status`: The current status of the application (referenced by `JobApplicationStatus`).
-    - `applied_at`: Timestamp when the application was submitted (read-only).
-    - `updated_at`: Timestamp when the application was last updated (read-only).
 
     ## Example Request:
     **POST /jobs/1234/applications/**
@@ -166,7 +161,7 @@ class JobApplicationViewSet(viewsets.ModelViewSet):
         "resume_url": "http://example.com/resume.pdf",
         "cover_letter_url": "http://example.com/cover_letter.pdf",
         "status": {
-            "status_code": "Pending",
+            "job_status_code": "Pending",
             "description": "The application is currently under review."
         },
         "applied_at": "2025-03-01T12:00:00Z",
@@ -179,24 +174,19 @@ class JobApplicationViewSet(viewsets.ModelViewSet):
     Request payload:
     ```json
     {
-        "status_code": "Accepted"
+        "job_status_code": "Hired"
     }
     ```
     Example response:
     ```json
     {
         "message": "Status updated successfully",
-        "new_status": "Accepted"
+        "new_status": "Hired"
     }
     ```
-
-    ## Fields:
-    - `job`: The job associated with the application.
-    - `job_seeker`: The user who applied.
-    - `status`: The current status of the application.
-    - `applied_at`: Timestamp of the application.
     """
 
+    queryset = JobApplication.objects.all()
     serializer_class = JobApplicationSerializer
 
     def get_queryset(self):
@@ -211,10 +201,11 @@ class JobApplicationViewSet(viewsets.ModelViewSet):
 
         **GET /jobs/{job_pk}/applications/** will return job applications for a specific job.
         """
+        queryset = super().get_queryset()
         user = self.request.user
         job_id = self.kwargs.get("job_pk")
         if job_id:
-            queryset = JobApplication.objects.filter(job_id=job_id)
+            queryset = queryset.filter(job_id=job_id)
 
         if user.is_superuser:
             return queryset
@@ -247,12 +238,13 @@ class JobApplicationViewSet(viewsets.ModelViewSet):
         """
         Employers can update the status of a job application.
 
-        **POST /applications/{application_id}/update-status/**: Allows the
+        **POST api/jobs/{job_pk}/applications/{application_id}/update-status/**: Allows the
         employer to change the application status (e.g., from "Pending" to "Accepted").
 
         ## Required Payload:
-        - `status_code`: The new status to apply to the job application
-        (e.g., "Accepted", "Rejected").
+        - `job_status_code`: The new status to apply to the job application.
+        The available statuses can be viewd at `/api/statuses/`.
+        (e.g., "Hired", "Rejected", "Interview Scheduled").
 
         **403 Forbidden**: If the request is not made by the employer associated with the job.
 
@@ -265,12 +257,11 @@ class JobApplicationViewSet(viewsets.ModelViewSet):
         # Ensure only the employer can update the status
         if job_application.job.employer != request.user:
             return Response(
-                {"error": "Only the employer can update the application status."},
-                status=403,
+                status=status.HTTP_403_FORBIDDEN,
             )
 
-        status_code = request.data.get("status_code")
-        status = get_object_or_404(JobApplicationStatus, status_code=status_code)
+        job_status_code = request.data.get("status_code")
+        status = get_object_or_404(JobApplicationStatus, status_code=job_status_code)
 
         # Log status change history
         JobApplicationStatusHistory.objects.create(
@@ -282,7 +273,7 @@ class JobApplicationViewSet(viewsets.ModelViewSet):
         job_application.save()
 
         return Response(
-            {"message": "Status updated successfully", "new_status": status_code}
+            {"message": "Status updated successfully", "new_status": job_status_code}
         )
 
 
@@ -304,7 +295,7 @@ class JobApplicationStatusHistoryViewSet(viewsets.ModelViewSet):
         {
             "status_hist_id": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
             "status": {
-                "status_code": "Pending",
+                "job_status_code": "Pending",
                 "description": "The application is currently under review."
             },
             "changed_at": "2025-03-01T12:00:00Z",
@@ -313,7 +304,7 @@ class JobApplicationStatusHistoryViewSet(viewsets.ModelViewSet):
         {
             "status_hist_id": "a47ac10b-58cc-4372-b567-1e02b2c3d479",
             "status": {
-                "status_code": "Accepted",
+                "job_status_code": "Accepted",
                 "description": "The application has been accepted."
             },
             "changed_at": "2025-03-02T14:00:00Z",
@@ -329,6 +320,7 @@ class JobApplicationStatusHistoryViewSet(viewsets.ModelViewSet):
     - `changed_by`: The user who changed the status (represented by their username).
     """
 
+    queryset = JobApplicationStatusHistory.objects.all()
     serializer_class = JobApplicationStatusHistorySerializer
     permission_classes = [IsAuthenticated]
 
@@ -340,7 +332,8 @@ class JobApplicationStatusHistoryViewSet(viewsets.ModelViewSet):
         **GET /applications/{application_id}/status-history/** will return the
         status change history for the application.
         """
-        application_id = self.kwargs["application_id"]
-        return JobApplicationStatusHistory.objects.filter(
-            job_application_id=application_id
-        )
+        queryset = super().get_queryset()
+
+        application_id = self.kwargs.get("application_pk")
+        if application_id:
+            return queryset.filter(job_application_id=application_id)

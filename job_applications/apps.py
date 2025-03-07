@@ -11,25 +11,25 @@ def create_default_statuses(sender, **kwargs):
 
     default_statuses = [
         {
-            "status_code": "Pending",
+            "job_status_code": "Pending",
             "description": "Application received and awaiting review",
         },
         {
-            "status_code": "Under Review",
+            "job_status_code": "Under Review",
             "description": "Application is being reviewed by the employer",
         },
         {
-            "status_code": "Interview Scheduled",
+            "job_status_code": "Interview Scheduled",
             "description": "Employer has scheduled an interview",
         },
-        {"status_code": "Hired", "description": "Candidate has been hired"},
-        {"status_code": "Rejected", "description": "Candidate has been rejected"},
+        {"job_status_code": "Hired", "description": "Candidate has been hired"},
+        {"job_status_code": "Rejected", "description": "Candidate has been rejected"},
     ]
 
     try:
         for status in default_statuses:
             JobApplicationStatus.objects.get_or_create(
-                status_code=status["status_code"], defaults=status
+                job_status_code=status["job_status_code"], defaults=status
             )
     except (OperationalError, ProgrammingError):
         # Ignore errors if the database is not ready yet (e.g., first migration)

@@ -11,7 +11,7 @@ class JobApplicationAdmin(admin.ModelAdmin):
 
 @admin.register(JobApplicationStatus)
 class JobApplicationStatusAdmin(admin.ModelAdmin):
-    list_display = ["status_code", "description"]
+    list_display = ["job_status_code", "description"]
 
 
 @admin.register(JobApplicationStatusHistory)

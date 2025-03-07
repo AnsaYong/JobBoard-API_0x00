@@ -23,14 +23,16 @@ nested_router.register(
 )
 
 # Nesting application status under applications
-nested_router.register(
-    r"applications/(?P<application_id>[^/.]+)/status",
-    ApplicationStatusViewSet,
-    basename="job-application-status",
+applications_router = NestedDefaultRouter(
+    nested_router, r"applications", lookup="application"
 )
+applications_router.register(
+    r"status", ApplicationStatusViewSet, basename="job-application-status"
+)
+
 # Nesting application status history under applications
-nested_router.register(
-    r"applications/(?P<application_id>[^/.]+)/status-history",
+applications_router.register(
+    r"status-history",
     JobApplicationStatusHistoryViewSet,
     basename="job-application-status-history",
 )
@@ -38,4 +40,5 @@ nested_router.register(
 urlpatterns = [
     path("", include(router.urls)),
     path("", include(nested_router.urls)),
+    path("", include(applications_router.urls)),
 ]
