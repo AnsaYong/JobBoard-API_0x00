@@ -1,21 +1,21 @@
 import pytest
+from django.db.utils import IntegrityError
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
-from django.db.utils import IntegrityError
 from user_management.tests.factories import UserFactory
 
 
 # Test user instance creation
 @pytest.mark.django_db
-def test_create_user(user_data):
+def test_create_jobseeker(jobseeker_data):
     """Test user creation."""
     user_model = get_user_model()
-    user = user_model.objects.create_user(**user_data)
-    assert user.email == user_data["email"]
-    assert user.first_name == user_data["first_name"]
-    assert user.last_name == user_data["last_name"]
-    assert user.role == user_data["role"]
-    assert user.check_password(user_data["password"])  # Check password hash
+    user = user_model.objects.create_user(**jobseeker_data)
+    assert user.email == jobseeker_data["email"]
+    assert user.first_name == jobseeker_data["first_name"]
+    assert user.last_name == jobseeker_data["last_name"]
+    assert user.role == jobseeker_data["role"]
+    assert user.check_password(jobseeker_data["password"])  # Check password hash
     assert user.created_at is not None
     assert user.updated_at is not None
 
@@ -25,6 +25,7 @@ def test_create_user(user_data):
 def test_create_superuser(admin_user):
     """Test superuser creation."""
     user = admin_user
+    assert user.role == "admin"
     assert user.is_staff is True
     assert user.is_superuser is True
 
@@ -87,17 +88,37 @@ def test_invalid_user_role(user_data):
 
     user = user_model(**user_data)
     with pytest.raises(ValidationError):
-        user.full_clean()  # This will trigger the validation and raise the error
+        user.full_clean()  # Trigger the validation which should raise an error
 
 
 # Test user model methods
 @pytest.mark.django_db
 def test_user_get_full_name(jobseeker_user):
-    """Test the get_full_name method of the user model."""
+    """Test the the default get_full_name method of the user model."""
     assert (
         jobseeker_user.get_full_name()
         == f"{jobseeker_user.first_name} {jobseeker_user.last_name}"
     )
+
+
+@pytest.mark.django_db
+def test_user_get_short_name(jobseeker_user):
+    """Test the the default get_short_name method of the user model."""
+    assert jobseeker_user.get_short_name() == jobseeker_user.first_name
+
+
+@pytest.mark.django_db
+def test_user_get_full_name_with_no_first_name(jobseeker_user):
+    """Test the get_full_name method when the first name is empty."""
+    jobseeker_user.first_name = ""
+    assert jobseeker_user.get_full_name() == jobseeker_user.last_name
+
+
+@pytest.mark.django_db
+def test_user_password_hash(jobseeker_user):
+    """Test that the password hash is correctly set."""
+    assert jobseeker_user.check_password("password123") is True
+    assert jobseeker_user.check_password("wrong_password") is False
 
 
 @pytest.mark.django_db

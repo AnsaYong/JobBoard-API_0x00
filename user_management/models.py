@@ -61,7 +61,15 @@ class User(AbstractUser):
 
     Methods:
         - `__str__()`: Returns a user-friendly string representation.
+        - Other default methods from AbstractUser (e.g., `check_password()`, `set_password()`),
+
     """
+
+    ROLE_CHOICES = [
+        ("jobseeker", "Jobseeker"),
+        ("employer", "Employer"),
+        ("admin", "Admin"),
+    ]
 
     user_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     email = models.EmailField(unique=True, null=False, blank=False, db_index=True)
@@ -69,11 +77,7 @@ class User(AbstractUser):
     last_name = models.CharField(max_length=100, null=False, blank=False)
     role = models.CharField(
         max_length=50,
-        choices=(
-            ("admin", "Admin"),
-            ("jobseeker", "Jobseeker"),
-            ("employer", "Employer"),
-        ),
+        choices=ROLE_CHOICES,
         null=False,
         blank=False,
         db_index=True,
