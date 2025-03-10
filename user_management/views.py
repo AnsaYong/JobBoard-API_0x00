@@ -17,6 +17,7 @@ from .serializers import (
     PasswordResetConfirmSerializer,
     PasswordChangeSerializer,
 )
+from .tasks import send_password_reset_email
 from permissions import IsJobBoardAdmin, IsEmployer, IsJobseeker
 
 
@@ -34,7 +35,7 @@ class RegisterView(generics.CreateAPIView):
     - `email`: (string) Required. User's email address.
     - `first_name`: (string) Required. User's first name.
     - `last_name`: (string) Required. User's last name.
-    - `role`: (string) Optional. User's role (jobseeker, employer, admin).
+    - `role`: (string) Required. User's role (jobseeker, employer, admin).
     - `password`: (string) Required. User's password (will be hashed).
     - `password2`: (string) Required. Confirm the password.
 
@@ -64,7 +65,6 @@ class RegisterView(generics.CreateAPIView):
         }
     """
 
-    # queryset = User.objects.all()
     serializer_class = RegisterSerializer
     permission_classes = [permissions.AllowAny]
 
@@ -72,7 +72,8 @@ class RegisterView(generics.CreateAPIView):
         """
         Handle the POST request for user registration.
 
-        This method processes the registration request and saves the user data if the serializer is valid.
+        This method processes the registration request and
+        saves the user data if the serializer is valid.
         """
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
@@ -92,7 +93,7 @@ class LoginView(APIView):
     """
     Login API that returns a JWT token.
 
-    This endpoint authenticates the user and returns a JWT access token and refresh token.
+    Authenticates the user and returns a JWT access token and refresh token.
     The user needs to provide a valid email and password for authentication.
     """
 
@@ -111,7 +112,8 @@ class LoginView(APIView):
 
         **Response:**
         - `message`: (string) Success message.
-        - `data`: (object) Contains `access_token` and `refresh_token` for authenticated user.
+        - `data`: (object) Contains `access_token` and `refresh_token`
+        for authenticated user.
 
         **Responses:**
         - **200 OK**:
@@ -119,8 +121,8 @@ class LoginView(APIView):
             {
                 "message": "User authenticated successfully",
                 "data": {
-                    "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzQwOTk5Njg0LCJpYXQiOjE3NDA5OTYwODQsImp0aSI6ImY3MGQ1ZmY4YzQ0ODQ1Y2VhNTc5ZjM0NGE0MTRmYWZjIiwidXNlcl9pZCI6IjA2ZjJmZThkLTM3ZTItNGVkMi04ZDFjLTQ0NDdjMWVkZmFjYSJ9.fCcIYPdiz_h_LUGJV89OWA5oxFAophp8IQu9MA_mD9c",
-                    "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzQwOTk5Njg0LCJpYXQiOjE3NDA5OTYwODQsImp0aSI6ImY3MGQ1ZmY4YzQ0ODQ1Y2VhNTc5ZjM0NGE0MTRmYWZjIiwidXNlcl9pZCI6IjA2ZjJmZThkLTM3ZTItNGVkMi04ZDFjLTQ0NDdjMWVkZmFjYSJ9.fCcIYPdiz_h_LUGJV89OWA5oxFAophp8IQu9MA_mD9c"
+                    "access_token": "eyJhbGciOiJIUzI1NiIs...fCcIYPdiz_h_LUGJV89O",
+                    "refresh_token": "eyJhbGciOiJIUzI1NiIs...fCcIYPdiz_h_LUGJV89O"
                 }
             }
             ```
@@ -168,18 +170,21 @@ class LogoutView(APIView):
     """
     Logout API that blacklists refresh tokens.
 
-    This endpoint invalidates the refresh token by blacklisting it, rendering it unusable for future requests.
-    Users must provide their refresh token to log out.
+    This endpoint invalidates the refresh token by blacklisting it,
+    rendering it unusable for future requests. Users must provide their
+    refresh token to log out.
     """
 
     def post(self, request):
         """
         Handle the POST request for logging out.
 
-        This method blacklists the provided refresh token, making it unusable for future requests.
+        This method blacklists the provided refresh token, making it unusable
+        for future requests.
 
         **Request Body:**
-        - `refresh_token`: (string) Required. The refresh token that needs to be blacklisted.
+        - `refresh_token`: (string) Required. The refresh token that needs to
+        be blacklisted.
 
         **Response:**
         - `message`: (string) Logout success message.
@@ -197,10 +202,17 @@ class LogoutView(APIView):
                 "error": "Invalid token"
             }
         """
+        refresh_token = request.data.get("refresh_token")
+
+        if not refresh_token:
+            return Response(
+                {"error": "Refresh token is required"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
         try:
-            refresh_token = request.data.get("refresh_token")  # Get the refresh token
             token = RefreshToken(refresh_token)
-            token.blacklist()  # Blacklist the refresh token
+            token.blacklist()
             return Response(
                 {"message": "Successfully logged out"},
                 status=status.HTTP_205_RESET_CONTENT,
@@ -213,7 +225,8 @@ class PasswordResetRequestView(APIView):
     """
     Request a password reset.
 
-    This endpoint allows users to request a password reset link by providing their email.
+    This endpoint allows users to request a password reset link by providing
+    their email.
     """
 
     permission_classes = [permissions.AllowAny]
@@ -222,7 +235,8 @@ class PasswordResetRequestView(APIView):
         """
         Handle the POST request for password reset.
 
-        This method sends a password reset link to the user's email if the email exists in the database.
+        This method sends a password reset link to the user's email if the email
+        exists in the database.
 
         **Request Body:**
         - `email`: (string) Required. The registered email address.
@@ -248,13 +262,8 @@ class PasswordResetRequestView(APIView):
             uid = urlsafe_base64_encode(force_bytes(user.pk))
             reset_link = f"https://frontend.com/reset-password/{uid}/{token}/"
 
-            # Send email (prints to console in development)
-            send_mail(
-                subject="Password Reset Request",
-                message=f"Click the link to reset your password: {reset_link}",
-                from_email="noreply@yourdomain.com",
-                recipient_list=[user.email],
-            )
+            # Send email with Celery
+            send_password_reset_email.delay(email, reset_link)
 
         except User.DoesNotExist:
             pass  # To prevent email enumeration
@@ -269,7 +278,8 @@ class PasswordResetConfirmView(APIView):
     """
     Confirm password reset.
 
-    This endpoint allows users to reset their password by providing a valid token.
+    This endpoint allows users to reset their password by providing
+    a valid token.
     """
 
     permission_classes = [permissions.AllowAny]
@@ -279,7 +289,8 @@ class PasswordResetConfirmView(APIView):
         This method resets the user's password if the token is valid.
 
         **Request Body:**
-        - `uid`: (string) Required. Encoded user ID from the password reset link.
+        - `uid`: (string) Required. Encoded user ID from the password
+        reset link.
         - `token`: (string) Required. Password reset token.
         - `new_password`: (string) Required. The new password.
 
@@ -328,7 +339,8 @@ class PasswordChangeView(generics.UpdateAPIView):
     """
     Change password (Authenticated users only).
 
-    This endpoint allows logged-in users to change their password by providing the old password.
+    This endpoint allows logged-in users to change their password by
+    providing the old password.
 
     **Request Body:**
     - `old_password`: (string) Required. The user's current password.
@@ -366,10 +378,12 @@ class CustomUserPagination(PageNumberPagination):
     """
     A custom pagination class for the User model.
 
-    Allows users to set custom page sizes and navigate through the paginated results.
+    Allows users to set custom page sizes and navigate through the
+    paginated results.
 
     **Attributes:**
-    - `page_size`: (int) Number of items per page (overrides the global PAGE_SIZE in settings.py).
+    - `page_size`: (int) Number of items per page
+    (overrides the global PAGE_SIZE in settings.py).
     - `page_size_query_param`: (str) URL query parameter to set the page size.
     - `max_page_size`: (int) Maximum number of items per page.
     """
@@ -384,10 +398,12 @@ class UserView(viewsets.ModelViewSet):
     API endpoint for managing users.
 
     This view allows CRUD operations on users, with role-based access control.
-    It supports listing, retrieving, creating, updating, and deleting users, with pagination enabled.
+    It supports listing, retrieving, creating, updating, and deleting users,
+    with pagination enabled.
 
     **Permissions:**
-    - `list`, `retrieve`, `update`, `partial_update`: Accessible by `IsJobBoardAdmin`, `IsEmployer`, and `IsJobseeker`.
+    - `list`, `retrieve`, `update`, `partial_update`: Accessible by
+    `IsJobBoardAdmin`, `IsEmployer`, and `IsJobseeker`.
     - `create`, `destroy`: Restricted to `IsJobBoardAdmin`.
     - Superusers have unrestricted access.
 
@@ -444,10 +460,13 @@ class UserView(viewsets.ModelViewSet):
 
     def get_permissions(self):
         """
-        Instantiates and returns the list of permissions that this view requires based on the action.
+        Instantiates and returns the list of permissions that this view
+        requires based on the action.
 
-        This method dynamically sets the permissions for the view based on the action being performed:
-        - `list`, `retrieve`, `update`, `partial_update`: Allowed for `IsJobBoardAdmin`, `IsEmployer`, `IsJobseeker`.
+        This method dynamically sets the permissions for the view based on
+        the action being performed:
+        - `list`, `retrieve`, `update`, `partial_update`: Allowed for
+        `IsJobBoardAdmin`, `IsEmployer`, `IsJobseeker`.
         - `create`, `destroy`: Restricted to `IsJobBoardAdmin`.
 
         **Returns:**
@@ -472,8 +491,9 @@ class UserView(viewsets.ModelViewSet):
         """
         Refines the queryset based on the authenticated user's role.
 
-        This method retrieves the users in the system. Admins and superusers can view all users,
-        while regular users can only view their own information.
+        This method retrieves the users in the system. Admins and superusers
+        can view all users, while regular users can only view their own
+        information.
 
         **Returns:**
         - A queryset of `User` objects filtered based on the user's role.
@@ -495,7 +515,8 @@ class UserView(viewsets.ModelViewSet):
         """
         Deactivate the authenticated user's account.
 
-        This endpoint allows users to deactivate their account by setting the 'is_active' field to False.
+        This endpoint allows users to deactivate their account by setting
+        the 'is_active' field to False.
 
         **Security Enhancements:**
         - Admins (`IsJobBoardAdmin`) can deactivate other users.
