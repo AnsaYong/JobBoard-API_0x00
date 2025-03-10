@@ -246,7 +246,7 @@ def test_password_change_valid():
     """Test changing password with correct old password"""
     user = User.objects.create_user(
         email="testuser@email.com",
-        password="password123",
+        password="@password123",
         first_name="Test",
         last_name="User",
     )
@@ -254,9 +254,9 @@ def test_password_change_valid():
     mock_request = MagicMock()
     mock_request.user = user
 
-    new_password = "newpassword123"
+    new_password = "@newpassword123"
     data = {
-        "old_password": "password123",
+        "old_password": "@password123",
         "new_password": new_password,
     }
 
@@ -324,7 +324,7 @@ def test_password_change_same_as_old():
     """Test that changing to the same password is allowed"""
     user = User.objects.create_user(
         email="testuser@email.com",
-        password="password123",
+        password="@password123",
         first_name="Test",
         last_name="User",
     )
@@ -333,8 +333,8 @@ def test_password_change_same_as_old():
     mock_request.user = user
 
     data = {
-        "old_password": "password123",
-        "new_password": "password123",
+        "old_password": "@password123",
+        "new_password": "@password123",
     }
     serializer = PasswordChangeSerializer(data=data, context={"request": mock_request})
 

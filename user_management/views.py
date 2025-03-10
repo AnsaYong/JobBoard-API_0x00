@@ -5,7 +5,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.pagination import PageNumberPagination
 from rest_framework import viewsets, generics, status, permissions
 from django.db import transaction
-from django.core.mail import send_mail
+from django.core.exceptions import ValidationError
 from django.contrib.auth import get_user_model, authenticate
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.utils.encoding import force_bytes, force_str
@@ -19,6 +19,7 @@ from .serializers import (
 )
 from .tasks import send_password_reset_email
 from permissions import IsJobBoardAdmin, IsEmployer, IsJobseeker
+from validators import is_valid_email, validate_password
 
 
 User = get_user_model()
@@ -253,7 +254,11 @@ class PasswordResetRequestView(APIView):
         ```
         """
         serializer = PasswordResetRequestSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
+        if not serializer.is_valid():
+            return Response(
+                {"error": "Invalid email format."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         email = serializer.validated_data["email"]
 
         try:
@@ -266,6 +271,7 @@ class PasswordResetRequestView(APIView):
             send_password_reset_email.delay(email, reset_link)
 
         except User.DoesNotExist:
+            print("User does not exist")
             pass  # To prevent email enumeration
 
         return Response(
@@ -311,6 +317,14 @@ class PasswordResetConfirmView(APIView):
         uid = serializer.validated_data["uid"]
         token = serializer.validated_data["token"]
         new_password = serializer.validated_data["new_password"]
+
+        try:
+            validate_password(new_password)  # Validate the password
+        except ValidationError as e:
+            return Response(
+                {"error": str(e)},  # Return validation error message
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         try:
             user_id = force_str(urlsafe_base64_decode(uid))
@@ -359,6 +373,7 @@ class PasswordChangeView(generics.UpdateAPIView):
     """
 
     serializer_class = PasswordChangeSerializer
+    permission_classes = [permissions.IsAuthenticated]
 
     def update(self, request, *args, **kwargs):
         serializer = self.get_serializer(

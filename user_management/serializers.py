@@ -3,6 +3,7 @@ from django.utils.encoding import force_str
 from django.contrib.auth import get_user_model
 from django.utils.http import urlsafe_base64_decode
 from django.contrib.auth.hashers import make_password
+from validators import validate_password
 
 User = get_user_model()
 
@@ -102,6 +103,14 @@ class PasswordChangeSerializer(serializers.Serializer):
         user = self.context["request"].user
         if not user.check_password(value):
             raise serializers.ValidationError("Old password is incorrect.")
+        return value
+
+    def validate_new_password(self, value):
+        """Validate the new password against Django's password policy."""
+        try:
+            validate_password(value)
+        except serializers.ValidationError as e:
+            raise serializers.ValidationError(e.messages)
         return value
 
 
