@@ -32,9 +32,16 @@ class RegisterSerializer(serializers.ModelSerializer):
         extra_kwargs = {"password": {"write_only": True}}
 
     def validate(self, data):
-        """Check if the passwords match."""
+        """Check if the passwords match and validate the password format."""
         if data["password"] != data["password2"]:
             raise serializers.ValidationError({"password": "Passwords do not match."})
+
+        # Validate the password strength
+        try:
+            validate_password(data["password"])
+        except serializers.ValidationError as e:
+            raise serializers.ValidationError({"password": e.messages})
+
         return data
 
     def create(self, validated_data):

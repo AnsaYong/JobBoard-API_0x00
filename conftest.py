@@ -14,7 +14,7 @@ def user_data():
         "email": "admin@email.com",
         "first_name": "Admin",
         "last_name": "User",
-        "password": "password123",
+        "password": "@password123",
         "role": "admin",
     }
 
@@ -25,7 +25,7 @@ def jobseeker_data():
         "email": "testuser@email.com",
         "first_name": "Test",
         "last_name": "User",
-        "password": "password123",
+        "password": "@password123",
         "role": "jobseeker",
     }
 
@@ -36,7 +36,7 @@ def employer_data():
         "email": "testemployer@email.com",
         "first_name": "Test",
         "last_name": "Employer",
-        "password": "password123",
+        "password": "@password123",
         "role": "employer",
     }
 

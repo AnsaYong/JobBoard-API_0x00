@@ -26,8 +26,8 @@ def test_register_user_valid():
         "first_name": "Test",
         "last_name": "User",
         "role": "jobseeker",
-        "password": "password123",
-        "password2": "password123",
+        "password": "@password123",
+        "password2": "@password123",
     }
     serializer = RegisterSerializer(data=data)
     assert serializer.is_valid()

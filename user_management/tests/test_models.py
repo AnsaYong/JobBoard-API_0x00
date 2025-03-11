@@ -117,7 +117,7 @@ def test_user_get_full_name_with_no_first_name(jobseeker_user):
 @pytest.mark.django_db
 def test_user_password_hash(jobseeker_user):
     """Test that the password hash is correctly set."""
-    assert jobseeker_user.check_password("password123") is True
+    assert jobseeker_user.check_password("@password123") is True
     assert jobseeker_user.check_password("wrong_password") is False
 
 

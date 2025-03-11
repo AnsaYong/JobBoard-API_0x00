@@ -32,7 +32,6 @@ class TestRegisterView:
 
     def test_register_user_already_exists(self, jobseeker_user, jobseeker_data):
         """Test that trying to register with an existing email fails"""
-        # Passing jobseeker_data to the fixture will cause the user to be created
         jobseeker_data["password2"] = jobseeker_data["password"]
         response = self.client.post(self.register_url, jobseeker_data, format="json")
 
