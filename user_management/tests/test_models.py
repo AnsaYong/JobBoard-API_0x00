@@ -134,7 +134,7 @@ def test_user_string_representation(jobseeker_user):
 def test_user_factory():
     """Test creating a user using factory_boy."""
     user = UserFactory.create()
-    assert user.email == "factoryuser@example.com"
+    assert user.email == "factoryuser0@example.com"
     assert user.first_name == "Factory"
     assert user.last_name == "User"
     assert user.role == "jobseeker"

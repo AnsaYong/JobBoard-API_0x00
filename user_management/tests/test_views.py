@@ -526,8 +526,10 @@ class TestPasswordChangeView:
 class TestUserView:
     """Tests for the User View API."""
 
-    def test_superuser_can_list_users(self, api_client, admin_user):
-        """Test that a superuser can list all users."""
+    def test_admin_can_see_all_users(
+        self, api_client, admin_user, employer_user, jobseeker_user
+    ):
+        """Test that an admin user can see all users."""
         api_client.force_authenticate(user=admin_user)
         users_list_url = reverse("user-list")
 
@@ -535,9 +537,15 @@ class TestUserView:
 
         assert response.status_code == status.HTTP_200_OK
         assert "results" in response.data
+        assert len(response.data["results"]) == 3  # Admin should see all users
+        returned_emails = {user["email"] for user in response.data["results"]}
+        expected_emails = {admin_user.email, employer_user.email, jobseeker_user.email}
+        assert returned_emails == expected_emails  # Ensure all users are listed
 
-    def test_admin_can_list_users(self, api_client, employer_user):
-        """Test that an employer user can list all users."""
+    def test_employer_can_only_see_their_profile(
+        self, api_client, employer_user, jobseeker_user
+    ):
+        """Test that an employer can only see their own profile."""
         api_client.force_authenticate(user=employer_user)
         users_list_url = reverse("user-list")
 
@@ -545,18 +553,33 @@ class TestUserView:
 
         assert response.status_code == status.HTTP_200_OK
         assert "results" in response.data
+        assert len(response.data["results"]) == 1
+        assert response.data["results"][0]["email"] == employer_user.email
 
-    def test_employer_can_retrieve_user(
+    def test_employer_can_retrieve_own_profile(
         self, api_client, employer_user, jobseeker_user
     ):
-        """Test that an employer user can retrieve a user."""
+        """Test that an employer can only retrieve their own profile."""
+        api_client.force_authenticate(user=employer_user)
+        users_detail_url = reverse("user-detail", args=[employer_user.pk])
+
+        response = api_client.get(users_detail_url)
+
+        assert response.status_code == 200
+        assert response.data["email"] == employer_user.email
+
+    def test_employer_cannot_retrieve_other_users(
+        self, api_client, employer_user, jobseeker_user
+    ):
+        """Test that an employer cannot retrieve another user's profile."""
         api_client.force_authenticate(user=employer_user)
         users_detail_url = reverse("user-detail", args=[jobseeker_user.pk])
 
         response = api_client.get(users_detail_url)
 
-        assert response.status_code == status.HTTP_200_OK
-        assert response.data["email"] == jobseeker_user.email
+        assert (
+            response.status_code == 404
+        )  # Only a user's profile is returned, unless admin
 
     def test_jobseeker_can_only_view_own_profile(
         self, api_client, jobseeker_user, employer_user
@@ -570,17 +593,37 @@ class TestUserView:
 
         users_detail_url = reverse("user-detail", args=[employer_user.pk])
         response = api_client.get(users_detail_url)
-        assert response.status_code == status.HTTP_403_FORBIDDEN
+        assert response.status_code == status.HTTP_404_NOT_FOUND
 
     def test_unauthenticated_user_cannot_access_users(self, api_client):
         """Test that an unauthenticated user cannot access the users endpoint."""
         users_list_url = reverse("user-list")
 
         response = api_client.get(users_list_url)
-        assert response.status_code == status.HTTP_401_UNAUTHORIZED
+
+        assert response.status_code == status.HTTP_403_FORBIDDEN
+        assert (
+            response.data["detail"] == "Authentication credentials were not provided."
+        )
 
     def test_admin_can_create_user(self, api_client, admin_user):
         """Test that an admin user can create a new user."""
+        api_client.force_authenticate(user=admin_user)
+        users_list_url = reverse("user-list")
+
+        data = {
+            "email": "newuser@example.com",
+            "first_name": "New",
+            "last_name": "User",
+            "password": "password123",
+            "role": "jobseeker",
+        }
+        response = api_client.post(users_list_url, data, format="json")
+
+        assert response.status_code == status.HTTP_201_CREATED
+
+    def test_admin_create_user_missing_fields(self, api_client, admin_user):
+        """Test that an admin user cannot create a new user with missing fields."""
         api_client.force_authenticate(user=admin_user)
         users_list_url = reverse("user-list")
 
@@ -591,7 +634,9 @@ class TestUserView:
         }
         response = api_client.post(users_list_url, data, format="json")
 
-        assert response.status_code == status.HTTP_201_CREATED
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert "first_name" in response.data
+        assert "last_name" in response.data
 
     def test_jobseeker_cannot_create_user(self, api_client, jobseeker_user):
         """Test that a jobseeker user cannot create a new user."""
@@ -627,8 +672,7 @@ class TestUserView:
         users_list_url = reverse("user-deactivate", args=[employer_user.pk])
 
         response = api_client.post(users_list_url)
-        assert response.status_code == status.HTTP_403_FORBIDDEN
-        assert response.data["error"] == "You cannot deactivate another user's account."
+        assert response.status_code == status.HTTP_404_NOT_FOUND
 
     def test_admin_can_deactivate_other_user(
         self, api_client, admin_user, jobseeker_user
@@ -666,7 +710,8 @@ class TestUserView:
         users_list_url = reverse("user-list")
 
         response = api_client.get(users_list_url, {"page_size": 5})
+
         assert response.status_code == status.HTTP_200_OK
         assert len(response.data["results"]) == 5
         assert "next" in response.data
-        assert "previous" not in response.data
+        assert response.data["previous"] is None

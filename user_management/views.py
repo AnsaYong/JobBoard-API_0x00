@@ -3,7 +3,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.pagination import PageNumberPagination
-from rest_framework import viewsets, generics, status, permissions
+from rest_framework import viewsets, generics, status, permissions, exceptions
 from django.db import transaction
 from django.core.exceptions import ValidationError
 from django.contrib.auth import get_user_model, authenticate
@@ -416,6 +416,9 @@ class UserView(viewsets.ModelViewSet):
     It supports listing, retrieving, creating, updating, and deleting users,
     with pagination enabled.
 
+    Methods:
+    - `deactivate`: Deactivate the authenticated user's account.
+
     **Permissions:**
     - `list`, `retrieve`, `update`, `partial_update`: Accessible by
     `IsJobBoardAdmin`, `IsEmployer`, and `IsJobseeker`.
@@ -488,6 +491,7 @@ class UserView(viewsets.ModelViewSet):
         - A list of permission classes that are applied to the current action.
         """
         user = self.request.user
+
         if user.is_superuser:
             return []
 
