@@ -94,7 +94,7 @@ class Skill(models.Model):
 
     def __str__(self):
         """Return the name of the skill as string representation."""
-        return self.name
+        return f"{self.name}"
 
 
 class JobType(models.TextChoices):
@@ -117,6 +117,7 @@ class JobPosting(models.Model):
     **Fields:**
     - `job_id`: A unique identifier for each job posting (UUID).
     - `employer`: Employer creating the job. Accidental `User` deletion is prevented by models.PROTECT.
+    - `company`: The company offering the job (max length: 255 characters).
     - `title`: The title of the job posting (max length: 255 characters).
     - `slug`: A slug field for SEO-friendly job posting urls.
     - `description`: A detailed description of the job (TextField).
@@ -137,33 +138,6 @@ class JobPosting(models.Model):
     - `verbose_name_plural`: "Job Postings"
     - `indexes`: Adds an index on `job_id` for faster query performance.
 
-    **Example:**
-    ```json
-    {
-        "job_id": "UUID",
-        "employer": "User ID",
-        "title": "Software Engineer",
-        "description": "We are looking for a Software Engineer with experience in Python.",
-        "job_type": "Full-Time",
-        "location": "Remote",
-        "industry": "Technology",
-        "skills_required": "Python, Django, REST APIs",
-        "salary_min": 50000,
-        "salary_max": 80000,
-        "currency": "ZAR",
-        "expiration_date": "2025-12-31T23:59:59Z",
-        "posted_at": "2025-03-04T08:00:00Z",
-        "updated_at": "2025-03-04T08:00:00Z"
-    }
-    ```
-
-    **Relationships:**
-    - `employer` is a ForeignKey to the `User` model, linking the job to the employer's profile.
-    - `location` is a ForeignKey to the `Location` model, indicating the job's location.
-    - `industry` is a ForeignKey to the `Industry` model, representing the industry category of the job.
-    - `skills_required` is a ManyToManyField to the `Skill` model, allowing multiple
-    skills to be associated with a job.
-
     **Methods:**
     - `save`: Override the save method to create a unique slug for each job posting.
     - `__str__`: Returns the title of the job posting as a string representation.
@@ -174,6 +148,7 @@ class JobPosting(models.Model):
     employer = models.ForeignKey(
         User, related_name="job_postings", on_delete=models.PROTECT, db_index=True
     )
+    company = models.CharField(max_length=255, null=True, blank=True)
     title = models.CharField(max_length=255, db_index=True)
     slug = models.SlugField(max_length=255, unique=True, blank=True)
     description = models.TextField()
@@ -231,4 +206,4 @@ class JobPosting(models.Model):
         """
         Returns the title of the job posting as string representation.
         """
-        return self.title
+        return f"{self.title} - {self.company}"

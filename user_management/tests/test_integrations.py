@@ -32,13 +32,9 @@ class TestUserManagementIntegration:
         login_data = {"email": user_data["email"], "password": user_data["password"]}
         login_response = api_client.post(login_url, login_data)
 
-        print(login_response.data)
-
         assert login_response.status_code == status.HTTP_200_OK
         assert "access_token" in login_response.data["data"]
         access_token = login_response.data["data"]["access_token"]
-
-        print("Acces token:", access_token)
 
         # Step 3: Update user profile
         user = User.objects.get(email=user_data["email"])

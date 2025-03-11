@@ -53,6 +53,7 @@ class JobPostingSerializer(serializers.ModelSerializer):
         fields = [
             "job_id",
             "employer",
+            "company",
             "title",
             "slug",
             "description",

@@ -1,6 +1,13 @@
 import pytest
+from django.utils import timezone
 from rest_framework.test import APIClient
 from django.contrib.auth import get_user_model
+from job_listings.tests.factories import (
+    LocationFactory,
+    IndustryFactory,
+    SkillFactory,
+    JobListingFactory,
+)
 
 
 @pytest.fixture
@@ -60,3 +67,41 @@ def employer_user(employer_data):
     """Fixture for creating a regular user"""
     user_model = get_user_model()
     return user_model.objects.create_user(**employer_data)
+
+
+@pytest.fixture
+def location():
+    """Fixture for creating a location."""
+    return LocationFactory.create(
+        city="San Francisco", country="USA", postal_code="10001", state_or_province="NY"
+    )
+
+
+@pytest.fixture
+def industry():
+    """Fixture for creating an industry."""
+    return IndustryFactory.create(name="NewTechnology")
+
+
+@pytest.fixture
+def skill():
+    """Fixture for creating a skill."""
+    return SkillFactory.create(name="NewPython")
+
+
+@pytest.fixture
+def job_listing(location, industry, skill, employer_user):
+    """Fixture for creating a job listing."""
+    expiration_date = timezone.make_aware(timezone.datetime(2022, 12, 31, 0, 0))
+
+    return JobListingFactory.create(
+        employer=employer_user,
+        title="Software Developer",
+        description="We are looking for a software developer.",
+        job_type="full-time",
+        location=location,
+        industry=industry,
+        company="Tech Corp",
+        skills_required=[skill],
+        expiration_date=expiration_date,
+    )

@@ -517,6 +517,9 @@ class UserView(viewsets.ModelViewSet):
         **Returns:**
         - A queryset of `User` objects filtered based on the user's role.
         """
+        if getattr(self, "swagger_fake_view", False):
+            return User.objects.none()
+
         user = self.request.user
 
         if user.is_superuser or user.role == "admin":
