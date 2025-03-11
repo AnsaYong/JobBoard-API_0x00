@@ -290,6 +290,9 @@ class JobPostingViewSet(viewsets.ModelViewSet):
         Returns:
         - **Job Posting queryset**: A filtered queryset based on the user's role and expiration date.
         """
+        if getattr(self, "swagger_fake_view", False):
+            return JobPosting.objects.none()
+
         queryset = super().get_queryset()
         user = self.request.user
 

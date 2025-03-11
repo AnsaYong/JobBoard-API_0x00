@@ -201,6 +201,9 @@ class JobApplicationViewSet(viewsets.ModelViewSet):
 
         **GET /jobs/{job_pk}/applications/** will return job applications for a specific job.
         """
+        if getattr(self, "swagger_fake_view", False):
+            return JobApplication.objects.none()
+
         queryset = super().get_queryset()
         user = self.request.user
         job_id = self.kwargs.get("job_pk")

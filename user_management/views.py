@@ -40,21 +40,16 @@ class RegisterView(generics.CreateAPIView):
     - `password`: (string) Required. User's password (will be hashed).
     - `password2`: (string) Required. Confirm the password.
 
-    **Response:**
-    - `message`: (string) Success message.
-    - `data`: (object) Contains user registration details, including
-    `email`, `first_name`, `last_name`, and `role`.
-
     **Responses:**
     - **201 Created**:
         ```json
         {
             "message": "Successful user registration!",
             "data": {
-                "user_id": "uuid",
                 "email": "user@example.com",
                 "first_name": "John",
                 "last_name": "Doe"
+                "role": "jobseeker"
             }
         }
         ```
@@ -110,11 +105,6 @@ class LoginView(APIView):
         **Request Body:**
         - `email`: (string) Required. User's email address.
         - `password`: (string) Required. User's password.
-
-        **Response:**
-        - `message`: (string) Success message.
-        - `data`: (object) Contains `access_token` and `refresh_token`
-        for authenticated user.
 
         **Responses:**
         - **200 OK**:

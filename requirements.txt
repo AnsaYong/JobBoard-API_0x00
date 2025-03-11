@@ -6,16 +6,19 @@ click==8.1.8
 click-didyoumean==0.3.1
 click-plugins==1.1.1
 click-repl==0.3.0
+dj-database-url==2.3.0
 Django==5.0.12
 django-cors-headers==4.7.0
 django-environ==0.12.0
 django-filter==25.1
+django-heroku==0.3.1
 djangorestframework==3.15.2
 djangorestframework_simplejwt==5.5.0
 drf-nested-routers==0.94.1
 drf-yasg==1.21.9
 factory_boy==3.3.3
 Faker==37.0.0
+gunicorn==23.0.0
 inflection==0.5.1
 iniconfig==2.0.0
 kombu==5.4.2
@@ -23,6 +26,7 @@ packaging==24.2
 pluggy==1.5.0
 prompt_toolkit==3.0.50
 psycopg2==2.9.10
+psycopg2-binary==2.9.10
 PyJWT==2.9.0
 pytest==8.3.5
 pytest-django==4.10.0
@@ -32,7 +36,9 @@ PyYAML==6.0.2
 redis==5.2.1
 six==1.17.0
 sqlparse==0.5.3
+typing_extensions==4.12.2
 tzdata==2025.1
 uritemplate==4.1.1
 vine==5.1.0
 wcwidth==0.2.13
+whitenoise==6.9.0
