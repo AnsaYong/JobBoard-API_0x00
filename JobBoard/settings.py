@@ -10,8 +10,10 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
+import os
+import environ
+import django_heroku
 from pathlib import Path
-import environ, os
 from datetime import timedelta
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -28,10 +30,10 @@ environ.Env.read_env(os.path.join(BASE_DIR, ".env"))
 SECRET_KEY = "django-insecure-$djo^*3v3%xoex8)j@#%sv5*5yj#n$+=zh3d##bmq1l^f#evyq"
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-# DEBUG = env.bool("DEBUG", default=False) # When in production!
+# DEBUG = True
+DEBUG = env.bool("DEBUG", default=False) == "True"  # In production!
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["jobboard-ansa.herokuapp.com", "localhost", "127.0.0.1"]
 
 
 # Application definition
@@ -226,3 +228,6 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # Custom User Model
 AUTH_USER_MODEL = "user_management.User"
+
+# Deploying with Heroku
+django_heroku.settings(locals())
