@@ -162,7 +162,7 @@ class JobPosting(models.Model):
         Industry, on_delete=models.SET_NULL, null=True, blank=True, db_index=True
     )
     skills_required = models.ManyToManyField(
-        Skill, related_name="job_postings", blank=True
+        Skill, related_name="job_postings", blank=True, db_index=True
     )
     salary_min = models.DecimalField(
         max_digits=10, decimal_places=2, null=True, blank=True
@@ -185,6 +185,7 @@ class JobPosting(models.Model):
             models.Index(fields=["title"]),
             models.Index(fields=["job_type"]),
             models.Index(fields=["expiration_date"]),
+            models.Index(fields=["industry"]),
         ]
 
     def save(self, *args, **kwargs):

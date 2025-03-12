@@ -1,6 +1,7 @@
 from datetime import datetime
 from rest_framework import filters
 from rest_framework import viewsets, permissions
+from rest_framework.response import Response
 from django.db.models import Q
 from django.core.cache import cache
 from django_filters.rest_framework import DjangoFilterBackend
@@ -306,7 +307,7 @@ class JobPostingViewSet(viewsets.ModelViewSet):
         # Try to get cached data
         cached_data = cache.get(cache_key)
         if cached_data:
-            return JobPosting.objects.filter(id__in=cached_data)
+            return JobPosting.objects.filter(job_id__in=cached_data)
 
         # if not cached, get the queryset
         queryset = super().get_queryset()
@@ -333,6 +334,19 @@ class JobPostingViewSet(viewsets.ModelViewSet):
 
         return queryset
 
+    def retrieve(self, request, *args, **kwargs):
+        """Cachiing individual job postings for 5 minutes."""
+        cache_key = f"job_posting_{kwargs['pk']}"
+        cached_data = cache.get(cache_key)
+
+        if cached_data:
+            return Response(cached_data)
+
+        response = super().retrieve(request, *args, **kwargs)
+        cache.set(cache_key, response.data, timeout=300)  # Cache for 5 minutes
+
+        return response
+
     def perform_create(self, serializer):
         """
         Override the perform_create method to automatically assign the employer
@@ -340,10 +354,37 @@ class JobPostingViewSet(viewsets.ModelViewSet):
 
         The employer is assigned based on the authenticated user making the request.
 
+        Cached data is cleared when a new job posting is created.
+
         Arguments:
         - **serializer**: The validated data for the job posting.
         """
+        cache.delete("job_postings_all_serialized")
+        cache.delete("job_postings_search_*")
         serializer.save(employer=self.request.user)
+
+    def perform_update(self, serializer):
+        """
+        Override the perform_update method to clear cached data when a job posting is updated.
+
+        Arguments:
+        - **serializer**: The validated data for the job posting.
+        """
+        cache.delete("job_postings_all_serialized")
+        cache.delete("job_postings_search_*")
+        serializer.save()
+
+    def perform_destroy(self, instance):
+        """
+        Override the perform_destroy method to clear cached data when a job posting is deleted.
+
+        Arguments:
+        - **instance**: The job posting instance to be deleted.
+        """
+        cache.delete("job_postings_all_serialized")
+        cache.delete("job_postings_search_*")
+        instance
+        instance.delete()
 
     def delete(self, request, *args, **kwargs):
         """
@@ -354,6 +395,9 @@ class JobPostingViewSet(viewsets.ModelViewSet):
         - **args**: Additional arguments.
         - **kwargs**: Additional keyword arguments.
         """
+        cache.delete("job_postings_all_serialized")
+        cache.delete("job_postings_search_*")
+
         instance = self.get_object()
         instance.delete_job()
         instance.save()
