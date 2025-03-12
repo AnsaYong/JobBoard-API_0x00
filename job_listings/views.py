@@ -1,8 +1,9 @@
 from datetime import datetime
+from rest_framework import filters
 from rest_framework import viewsets, permissions
 from django.db.models import Q
+from django.core.cache import cache
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import filters
 from django.contrib.postgres.search import SearchVector, SearchQuery, SearchRank
 from .models import JobPosting, Location, Industry, Skill
 from .serializers import (
@@ -244,7 +245,11 @@ class JobPostingViewSet(viewsets.ModelViewSet):
 
     """
 
-    queryset = JobPosting.objects.all().order_by("-posted_at")
+    queryset = (
+        JobPosting.objects.select_related("industry", "location", "employer")
+        .prefetch_related("skills_required")
+        .order_by("-posted_at")
+    )  # Optimized query for job postings
     serializer_class = JobPostingSerializer
 
     filter_backends = (
@@ -283,6 +288,7 @@ class JobPostingViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         """
         Returns the queryset for job postings based on the user's role.
+        Caching for job postings is implemented to reduce database queries.
 
         - **Superusers** can view all job postings.
         - **Regular users** (Job Seekers and Employers) can only view job postings
@@ -294,6 +300,15 @@ class JobPostingViewSet(viewsets.ModelViewSet):
         if getattr(self, "swagger_fake_view", False):
             return JobPosting.objects.none()
 
+        search_query = self.request.query_params.get("search", None)
+        cache_key = f"job_postings_{search_query or 'all'}"
+
+        # Try to get cached data
+        cached_data = cache.get(cache_key)
+        if cached_data:
+            return JobPosting.objects.filter(id__in=cached_data)
+
+        # if not cached, get the queryset
         queryset = super().get_queryset()
         user = self.request.user
 
@@ -305,7 +320,6 @@ class JobPostingViewSet(viewsets.ModelViewSet):
                 expiration_date__gte=datetime.now()
             )
 
-        search_query = self.request.query_params.get("search", None)
         if search_query:
             search_vector = SearchVector("title", "description")
             search_query = SearchQuery(search_query)
@@ -313,7 +327,11 @@ class JobPostingViewSet(viewsets.ModelViewSet):
                 rank=SearchRank(search_vector, search_query)
             ).filter(rank__gte=0.3)
 
-        return queryset.order_by("-posted_at")
+        # Cache job IDs for 5 minutes
+        job_ids = list(queryset.values_list("job_id", flat=True))
+        cache.set(cache_key, job_ids, timeout=300)
+
+        return queryset
 
     def perform_create(self, serializer):
         """
