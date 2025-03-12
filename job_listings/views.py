@@ -374,18 +374,6 @@ class JobPostingViewSet(viewsets.ModelViewSet):
         cache.delete("job_postings_search_*")
         serializer.save()
 
-    def perform_destroy(self, instance):
-        """
-        Override the perform_destroy method to clear cached data when a job posting is deleted.
-
-        Arguments:
-        - **instance**: The job posting instance to be deleted.
-        """
-        cache.delete("job_postings_all_serialized")
-        cache.delete("job_postings_search_*")
-        instance
-        instance.delete()
-
     def delete(self, request, *args, **kwargs):
         """
         Soft delete a job posting by calling the `delete_job` method on the instance.
