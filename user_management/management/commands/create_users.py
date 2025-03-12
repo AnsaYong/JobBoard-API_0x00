@@ -25,7 +25,7 @@ class Command(BaseCommand):
         superuser = User.objects.filter(is_superuser=True).first()
 
         if superuser:
-            deleted_count, _ = User.objects.exclude(id=superuser.id).delete()
+            deleted_count, _ = User.objects.exclude(user_id=superuser.user_id).delete()
             self.stdout.write(
                 self.style.SUCCESS(
                     f"Deleted {deleted_count} users, keeping the superuser."
@@ -46,11 +46,11 @@ class Command(BaseCommand):
         num_jobseekers = User.objects.filter(role="jobseeker").count()
         num_employers = User.objects.filter(role="employer").count()
 
-        if num_employers >= num_jobseekers:
-            self.stdout.write(
-                self.style.ERROR("There must be more jobseekers than employers!")
-            )
-            return
+        # if num_employers >= num_jobseekers:
+        #     self.stdout.write(
+        #         self.style.ERROR("There must be more jobseekers than employers!")
+        #     )
+        #     return
 
         created_users = []
         for _ in range(count):
@@ -68,7 +68,9 @@ class Command(BaseCommand):
                     num_employers += 1
 
         self.stdout.write(
-            self.style.SUCCESS(f"Successfully created {len(created_users)} users!")
+            self.style.SUCCESS(
+                f"Successfully created {len(created_users)} users - {num_employers} employers and {num_jobseekers} jobseekers!"
+            )
         )
 
     def create_admin(self):

@@ -194,6 +194,13 @@ class JobPosting(models.Model):
         """
         if not self.slug:
             self.slug = slugify(self.title)
+
+            original_slug = self.slug
+            counter = 1
+            while JobPosting.objects.filter(slug=self.slug).exists():
+                self.slug = f"{original_slug}-{uuid.uuid4().hex[:6]}"
+                counter += 1
+
         super().save(*args, **kwargs)
 
     def delete_job(self):
