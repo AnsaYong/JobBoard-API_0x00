@@ -70,6 +70,7 @@ class LocationViewSet(viewsets.ModelViewSet):
 
     queryset = Location.objects.all()
     serializer_class = LocationSerializer
+    permission_classes = [permissions.AllowAny]
 
     def get_queryset(self):
         """
