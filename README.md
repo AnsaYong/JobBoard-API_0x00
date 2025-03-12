@@ -147,7 +147,7 @@ The Search Index model is used to enhance search functionality across the platfo
 - **Caching**: Redis (for real-time notifications)
 - **Messaging/Notifications**: Celery & Redis for background tasks (notifications)
 - **Search**: Full-text search with PostgreSQL
-- ***Unit and Integration testing**: Pytest
+- **Unit and Integration testing**: Pytest
 - **Deployment**: Heroku
 
 ## Installation
@@ -265,5 +265,7 @@ This project is licensed under the MIT License. See LICENSE for details.
 
 ## Contact & Feedback
 For questions or feedback, feel free to reach out:
+
 📧 Email: ansahmbomyong@gmail.com
+
 🐙 GitHub Issues: Open an Issue
