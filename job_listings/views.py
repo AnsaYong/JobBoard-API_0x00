@@ -1,7 +1,8 @@
 from datetime import datetime
 from rest_framework import filters
-from rest_framework import viewsets, permissions
 from rest_framework.response import Response
+from rest_framework import viewsets, permissions
+from rest_framework.pagination import PageNumberPagination
 from django.db.models import Q
 from django.core.cache import cache
 from django_filters.rest_framework import DjangoFilterBackend
@@ -136,6 +137,25 @@ class SkillViewSet(viewsets.ModelViewSet):
         return queryset
 
 
+class CustomUserPagination(PageNumberPagination):
+    """
+    A custom pagination class for the User model.
+
+    Allows users to set custom page sizes and navigate through the
+    paginated results.
+
+    **Attributes:**
+    - `page_size`: (int) Number of items per page
+    (overrides the global PAGE_SIZE in settings.py).
+    - `page_size_query_param`: (str) URL query parameter to set the page size.
+    - `max_page_size`: (int) Maximum number of items per page.
+    """
+
+    page_size = 5
+    page_size_query_param = "page_size"
+    max_page_size = 50
+
+
 class JobPostingViewSet(viewsets.ModelViewSet):
     """
     API endpoint to create and manage job postings.
@@ -246,12 +266,14 @@ class JobPostingViewSet(viewsets.ModelViewSet):
 
     """
 
+    serializer_class = JobPostingSerializer
+    pagination_class = CustomUserPagination
+
     queryset = (
         JobPosting.objects.select_related("industry", "location", "employer")
         .prefetch_related("skills_required")
         .order_by("-posted_at")
-    )  # Optimized query for job postings
-    serializer_class = JobPostingSerializer
+    )
 
     filter_backends = (
         DjangoFilterBackend,
