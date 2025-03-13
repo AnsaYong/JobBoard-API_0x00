@@ -15,6 +15,7 @@ import environ
 import django_heroku
 from pathlib import Path
 from datetime import timedelta
+from urllib.parse import urlparse
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -198,8 +199,10 @@ CACHES = {
         "LOCATION": env.str("REDIS_URL", "").replace("rediss://", "redis://"),
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
-            "PASSWORD": env.str("REDIS_URL", "").split("@")[0].split(":")[-1],
             "SSL": True,  # Ensures SSL connection
+            "PASSWORD": urlparse(
+                env.str("REDIS_URL")
+            ).password,  # Extract password safely
         },
     }
 }
