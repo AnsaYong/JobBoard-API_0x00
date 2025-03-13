@@ -3,7 +3,7 @@ from rest_framework import filters
 from rest_framework.response import Response
 from rest_framework import viewsets, permissions
 from rest_framework.pagination import PageNumberPagination
-from django.db.models import Q
+from django.db.models import Q, F
 from django.core.cache import cache
 from django_filters.rest_framework import DjangoFilterBackend
 from django.contrib.postgres.search import SearchVector, SearchQuery, SearchRank
@@ -164,7 +164,7 @@ class JobPostingViewSet(viewsets.ModelViewSet):
     and full-text search on the job title and description.
 
     **Permissions**:
-    - **List/Read**: Available to Job Seekers, Employers, and Admins.
+    - **List/Read**: Available to all users, including unauthenticated users.
     - **Create/Update/Delete**: Restricted to Employers and Admins.
 
     **Example Request Format:**
@@ -351,13 +351,13 @@ class JobPostingViewSet(viewsets.ModelViewSet):
             )
 
         # Handle search queries
-        search_query = self.request.query_params.get("search", None)
         if search_query:
             search_vector = SearchVector("title", "description")
-            search_query = SearchQuery(search_query)
+            search_query_obj = SearchQuery(search_query)
             queryset = queryset.annotate(
-                rank=SearchRank(search_vector, search_query)
+                rank=SearchRank(search_vector, search_query_obj)
             ).filter(rank__gte=0.3)
+            queryset = queryset.order_by("-rank")
 
         # Cache job IDs for 5 minutes
         job_ids = list(queryset.values_list("job_id", flat=True))

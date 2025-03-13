@@ -32,8 +32,8 @@ environ.Env.read_env(os.path.join(BASE_DIR, ".env"))
 SECRET_KEY = env.str("SECRET_KEY")  # For Heroku
 
 # SECURITY WARNING: don't run with debug turned on in production!
-# DEBUG = True
-DEBUG = env.bool("DEBUG", default=False) == "True"  # For Heroku
+DEBUG = True
+# DEBUG = env.bool("DEBUG", default=False) == "True"  # For Heroku
 
 # Connecting hosts
 # Local
@@ -121,7 +121,6 @@ CORS_ALLOW_ALL_ORIGINS = True  # Change to False in production
 
 # For production
 # CORS_ALLOWED_ORIGINS = [
-#     "http://localhost:3000",  # React frontend (adjust as needed)
 #     "http://127.0.0.1:8000",  # Django itself
 # ]
 CORS_ALLOW_CREDENTIALS = (
