@@ -160,11 +160,10 @@ DEFAULT_FROM_EMAIL = env(
 # Heroku Redis SSL setup
 redis_url = env.str("REDIS_URL", "")
 if redis_url.startswith("rediss://"):
-    CELERY_BROKER_URL = f"{redis_url}?ssl_cert_reqs=CERT_NONE"
-    CELERY_RESULT_BACKEND = f"{redis_url}?ssl_cert_reqs=CERT_NONE"
-else:
-    CELERY_BROKER_URL = redis_url
-    CELERY_RESULT_BACKEND = redis_url
+    redis_url = redis_url.replace("rediss://", "redis://", 1)  # Convert to non-SSL
+
+CELERY_BROKER_URL = redis_url
+CELERY_RESULT_BACKEND = redis_url
 
 TEMPLATES = [
     {
@@ -201,6 +200,7 @@ CACHES = {
         "LOCATION": env.str("REDIS_URL", ""),
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
+            "CONNECTION_POOL_KWARGS": {"ssl_cert_reqs": None},
         },
     }
 }
