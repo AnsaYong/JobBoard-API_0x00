@@ -300,7 +300,7 @@ class JobPostingViewSet(viewsets.ModelViewSet):
             return [permissions.AllowAny()]
 
         if self.action in ["list", "retrieve"]:
-            permission_classes = [permissions.AllowAny()]
+            permission_classes = [permissions.AllowAny]
         elif self.action in ["create", "update", "partial_update", "destroy"]:
             permission_classes = [IsEmployer | IsJobBoardAdmin]
         else:

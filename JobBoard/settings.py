@@ -27,15 +27,19 @@ environ.Env.read_env(os.path.join(BASE_DIR, ".env"))
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-# SECRET_KEY = "django-insecure-$djo^*3v3%xoex8)j@#%sv5*5yj#n$+=zh3d##bmq1l^f#evyq"
-SECRET_KEY = env.str("SECRET_KEY")  # For Heroku
+SECRET_KEY = "django-insecure-$djo^*3v3%xoex8)j@#%sv5*5yj#n$+=zh3d##bmq1l^f#evyq"
+# SECRET_KEY = env.str("SECRET_KEY")  # For Heroku
 
 # SECURITY WARNING: don't run with debug turned on in production!
 # DEBUG = True
 DEBUG = env.bool("DEBUG", default=False) == "True"  # For Heroku
 
 # ALLOWED_HOSTS = []
-ALLOWED_HOSTS = ["jobboard-ansa.herokuapp.com", "localhost", "127.0.0.1"]  # For Heroku
+ALLOWED_HOSTS = [
+    "jobboard-ansa-1c9b5bf3c95c.herokuapp.com",
+    "localhost",
+    "127.0.0.1",
+]  # For Heroku
 
 
 # Application definition
