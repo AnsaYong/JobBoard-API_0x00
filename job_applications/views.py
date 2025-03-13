@@ -1,6 +1,6 @@
 from django.shortcuts import get_object_or_404
 from rest_framework import viewsets, status
-from rest_framework.permissions import IsAuthenticated
+from rest_framework import permissions
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 from rest_framework.decorators import action
@@ -52,6 +52,7 @@ class JobApplicationStatusViewSet(viewsets.ModelViewSet):
 
     queryset = JobApplicationStatus.objects.all()
     serializer_class = JobApplicationStatusSerializer
+    permission_classes = [permissions.AllowAny]
 
 
 class ApplicationStatusViewSet(viewsets.ModelViewSet):
@@ -325,7 +326,7 @@ class JobApplicationStatusHistoryViewSet(viewsets.ModelViewSet):
 
     queryset = JobApplicationStatusHistory.objects.all()
     serializer_class = JobApplicationStatusHistorySerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
         """
