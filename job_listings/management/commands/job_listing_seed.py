@@ -13,8 +13,8 @@ class Command(BaseCommand):
 
     def handle(self, *args, **kwargs):
 
-        # Claer existing job postings
-        self.stdout.write(self.style.WARNING("Clearing existing user data..."))
+        # Clear existing job postings
+        self.stdout.write(self.style.WARNING("Clearing existing job posting data..."))
         JobPosting.objects.all().delete()
         self.stdout.write(self.style.SUCCESS("Cleared existing job postings."))
 

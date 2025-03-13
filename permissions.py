@@ -36,6 +36,7 @@ class IsJobseeker(permissions.BasePermission):
     def has_permission(self, request, view):
 
         if not request.user.is_authenticated:
+            print("User not authenticated")
             return
 
         return request.user and request.user.role == "jobseeker"
