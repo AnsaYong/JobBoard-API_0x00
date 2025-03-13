@@ -324,6 +324,8 @@ class JobPostingViewSet(viewsets.ModelViewSet):
         if getattr(self, "swagger_fake_view", False):
             return JobPosting.objects.none()
 
+        search_query = self.request.query_params.get("search", None)
+
         # Try to get cached data
         cache_key = f"job_postings_{search_query or 'all'}"
         cached_data = cache.get(cache_key)
@@ -344,7 +346,6 @@ class JobPostingViewSet(viewsets.ModelViewSet):
                     is_active=True, expiration_date__gte=datetime.now()
                 )
         else:
-            # Anonymous users should see only active, non-expired jobs
             queryset = queryset.filter(
                 is_active=True, expiration_date__gte=datetime.now()
             )
