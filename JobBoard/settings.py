@@ -158,7 +158,7 @@ DEFAULT_FROM_EMAIL = env(
 
 # Heroku
 # CELERY_BROKER_URL = os.environ.get("REDIS_URL", "redis://localhost:6379/0")
-CELERY_BROKER_URL = env.get("REDIS_URL", "").replace("rediss://", "redis://")
+CELERY_BROKER_URL = env.str("REDIS_URL", "").replace("rediss://", "redis://")
 CELERY_BROKER_URL_SSL = {"ssl_cert_reqs": None}  # Ensures SSL connection
 CELERY_ACCEPT_CONTENT = ["json"]
 CELERY_TASK_SERIALIZER = "json"
@@ -195,10 +195,10 @@ TEMPLATES = [
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": env.get("REDIS_URL", "").replace("rediss://", "redis://"),
+        "LOCATION": env.str("REDIS_URL", "").replace("rediss://", "redis://"),
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
-            "PASSWORD": env.get("REDIS_URL", "").split("@")[0].split(":")[-1],
+            "PASSWORD": env.str("REDIS_URL", "").split("@")[0].split(":")[-1],
             "SSL": True,  # Ensures SSL connection
         },
     }
