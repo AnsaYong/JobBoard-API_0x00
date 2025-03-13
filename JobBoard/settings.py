@@ -34,12 +34,16 @@ SECRET_KEY = env.str("SECRET_KEY")  # For Heroku
 # DEBUG = True
 DEBUG = env.bool("DEBUG", default=False) == "True"  # For Heroku
 
+# Connecting hosts
+# Local
 # ALLOWED_HOSTS = []
+
+# Heroku
 ALLOWED_HOSTS = [
     "jobboard-ansa-1c9b5bf3c95c.herokuapp.com",
     "localhost",
     "127.0.0.1",
-]  # For Heroku
+]
 
 
 # Application definition
@@ -147,10 +151,15 @@ DEFAULT_FROM_EMAIL = env(
 )
 
 # Celery Configuration
+# # Local
 # CELERY_BROKER_URL = "redis://localhost:6379/0"
-CELERY_BROKER_URL = os.environ.get(
-    "REDIS_URL", "redis://localhost:6379/0"
-)  # For Heroku
+# CELERY_ACCEPT_CONTENT = ["json"]
+# CELERY_TASK_SERIALIZER = "json"
+
+# Heroku
+# CELERY_BROKER_URL = os.environ.get("REDIS_URL", "redis://localhost:6379/0")
+CELERY_BROKER_URL = env.get("REDIS_URL", "").replace("rediss://", "redis://")
+CELERY_BROKER_URL_SSL = {"ssl_cert_reqs": None}  # Ensures SSL connection
 CELERY_ACCEPT_CONTENT = ["json"]
 CELERY_TASK_SERIALIZER = "json"
 
@@ -171,15 +180,26 @@ TEMPLATES = [
 ]
 
 # Cache Configuration
+# # Local
+# CACHES = {
+#     "default": {
+#         "BACKEND": "django_redis.cache.RedisCache",
+#         "LOCATION": "redis://127.0.0.1:6379/1",
+#         "OPTIONS": {
+#             "CLIENT_CLASS": "django_redis.client.DefaultClient",
+#         },
+#     }
+# }
+
+# Heroku
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
-        # "LOCATION": "redis://127.0.0.1:6379/1",
-        "LOCATION": os.environ.get(
-            "REDIS_URL", "redis://localhost:6379/1"
-        ),  # For Heroku
+        "LOCATION": env.get("REDIS_URL", "").replace("rediss://", "redis://"),
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
+            "PASSWORD": env.get("REDIS_URL", "").split("@")[0].split(":")[-1],
+            "SSL": True,  # Ensures SSL connection
         },
     }
 }
