@@ -160,13 +160,11 @@ DEFAULT_FROM_EMAIL = env(
 # Heroku Redis SSL setup
 redis_url = env.str("REDIS_URL", "")
 if redis_url.startswith("rediss://"):
-    from redis import SSLContext
-
-    ssl_context = SSLContext()
-    ssl_context.veryfy_mode = ssl_context.CERT_NONE
-
     CELERY_BROKER_URL = f"{redis_url}?ssl_cert_reqs=CERT_NONE"
     CELERY_RESULT_BACKEND = f"{redis_url}?ssl_cert_reqs=CERT_NONE"
+else:
+    CELERY_BROKER_URL = redis_url
+    CELERY_RESULT_BACKEND = redis_url
 
 TEMPLATES = [
     {
