@@ -312,6 +312,7 @@ class JobPostingViewSet(viewsets.ModelViewSet):
         """
         Returns the queryset for job postings based on the user's role.
         Caching for job postings is implemented to reduce database queries.
+        Allows unauthenticated users to view jobs.
 
         - **Superusers** can view all job postings.
         - **Regular users** (Job Seekers and Employers) can only view job postings
@@ -323,26 +324,33 @@ class JobPostingViewSet(viewsets.ModelViewSet):
         if getattr(self, "swagger_fake_view", False):
             return JobPosting.objects.none()
 
-        search_query = self.request.query_params.get("search", None)
-        cache_key = f"job_postings_{search_query or 'all'}"
-
         # Try to get cached data
+        cache_key = f"job_postings_{search_query or 'all'}"
         cached_data = cache.get(cache_key)
         if cached_data:
             return JobPosting.objects.filter(job_id__in=cached_data)
 
-        # if not cached, get the queryset
+        # Get the base queryset
         queryset = super().get_queryset()
+
         user = self.request.user
 
-        if user.role == "employer":
-            queryset = queryset.filter(employer=user)
-
-        if user.role == "jobseeker":
-            queryset = queryset.filter(is_active=True).filter(
-                expiration_date__gte=datetime.now()
+        # Handle filtering based on user role
+        if user.is_authenticated:
+            if user.role == "employer":
+                queryset = queryset.filter(employer=user)
+            elif user.role == "jobseeker":
+                queryset = queryset.filter(
+                    is_active=True, expiration_date__gte=datetime.now()
+                )
+        else:
+            # Anonymous users should see only active, non-expired jobs
+            queryset = queryset.filter(
+                is_active=True, expiration_date__gte=datetime.now()
             )
 
+        # Handle search queries
+        search_query = self.request.query_params.get("search", None)
         if search_query:
             search_vector = SearchVector("title", "description")
             search_query = SearchQuery(search_query)
