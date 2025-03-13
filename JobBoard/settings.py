@@ -157,10 +157,16 @@ DEFAULT_FROM_EMAIL = env(
 # CELERY_ACCEPT_CONTENT = ["json"]
 # CELERY_TASK_SERIALIZER = "json"
 
-# Heroku
-# CELERY_BROKER_URL = os.environ.get("REDIS_URL", "redis://localhost:6379/0")
-CELERY_BROKER_URL = env.str("REDIS_URL", "")
-CELERY_RESULT_BACKEND = env.str("REDIS_URL", "")
+# Heroku Redis SSL setup
+redis_url = env.str("REDIS_URL", "")
+if redis_url.startswith("rediss://"):
+    from redis import SSLContext
+
+    ssl_context = SSLContext()
+    ssl_context.veryfy_mode = ssl_context.CERT_NONE
+
+    CELERY_BROKER_URL = f"{redis_url}?ssl_cert_reqs=CERT_NONE"
+    CELERY_RESULT_BACKEND = f"{redis_url}?ssl_cert_reqs=CERT_NONE"
 
 TEMPLATES = [
     {
