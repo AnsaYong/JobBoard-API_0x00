@@ -32,8 +32,8 @@ environ.Env.read_env(os.path.join(BASE_DIR, ".env"))
 SECRET_KEY = env.str("SECRET_KEY")  # For Heroku
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-# DEBUG = env.bool("DEBUG", default=False) == "True"  # For Heroku
+# DEBUG = True
+DEBUG = env.bool("DEBUG", default=False) == "True"  # For Heroku
 
 # Connecting hosts
 # Local
