@@ -28,8 +28,8 @@ environ.Env.read_env(os.path.join(BASE_DIR, ".env"))
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-# SECRET_KEY = "django-insecure-$djo^*3v3%xoex8)j@#%sv5*5yj#n$+=zh3d##bmq1l^f#evyq"
-SECRET_KEY = env.str("SECRET_KEY")  # For Heroku
+SECRET_KEY = "django-insecure-$djo^*3v3%xoex8)j@#%sv5*5yj#n$+=zh3d##bmq1l^f#evyq"
+# SECRET_KEY = env.str("SECRET_KEY")  # For Heroku
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -37,14 +37,14 @@ DEBUG = True
 
 # Connecting hosts
 # Local
-# ALLOWED_HOSTS = []
+ALLOWED_HOSTS = []
 
 # Heroku
-ALLOWED_HOSTS = [
-    "jobboard-ansa-1c9b5bf3c95c.herokuapp.com",
-    "localhost",
-    "127.0.0.1",
-]
+# ALLOWED_HOSTS = [
+#     "jobboard-ansa-1c9b5bf3c95c.herokuapp.com",
+#     "localhost",
+#     "127.0.0.1",
+# ]
 
 
 # Application definition
@@ -151,18 +151,18 @@ DEFAULT_FROM_EMAIL = env(
 )
 
 # Celery Configuration
-# # Local
-# CELERY_BROKER_URL = "redis://localhost:6379/0"
-# CELERY_ACCEPT_CONTENT = ["json"]
-# CELERY_TASK_SERIALIZER = "json"
+# Local
+CELERY_BROKER_URL = "redis://localhost:6379/0"
+CELERY_ACCEPT_CONTENT = ["json"]
+CELERY_TASK_SERIALIZER = "json"
 
-# Heroku Redis SSL setup
-redis_url = env.str("REDIS_URL", "")
-if redis_url.startswith("rediss://"):
-    redis_url = redis_url.replace("rediss://", "redis://", 1)  # Convert to non-SSL
+# # Heroku Redis SSL setup
+# redis_url = env.str("REDIS_URL", "")
+# if redis_url.startswith("rediss://"):
+#     redis_url = redis_url.replace("rediss://", "redis://", 1)  # Convert to non-SSL
 
-CELERY_BROKER_URL = redis_url
-CELERY_RESULT_BACKEND = redis_url
+# CELERY_BROKER_URL = redis_url
+# CELERY_RESULT_BACKEND = redis_url
 
 TEMPLATES = [
     {
@@ -181,28 +181,28 @@ TEMPLATES = [
 ]
 
 # Cache Configuration
-# # Local
-# CACHES = {
-#     "default": {
-#         "BACKEND": "django_redis.cache.RedisCache",
-#         "LOCATION": "redis://127.0.0.1:6379/1",
-#         "OPTIONS": {
-#             "CLIENT_CLASS": "django_redis.client.DefaultClient",
-#         },
-#     }
-# }
-
-# Heroku
+# Local
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": env.str("REDIS_URL", ""),
+        "LOCATION": "redis://127.0.0.1:6379/1",
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
-            "CONNECTION_POOL_KWARGS": {"ssl_cert_reqs": None},
         },
     }
 }
+
+# # Heroku
+# CACHES = {
+#     "default": {
+#         "BACKEND": "django_redis.cache.RedisCache",
+#         "LOCATION": env.str("REDIS_URL", ""),
+#         "OPTIONS": {
+#             "CLIENT_CLASS": "django_redis.client.DefaultClient",
+#             "CONNECTION_POOL_KWARGS": {"ssl_cert_reqs": None},
+#         },
+#     }
+# }
 
 
 # Database
@@ -215,18 +215,18 @@ CACHES = {
 #     }
 # }
 
-# DATABASES = {
-#     "default": {
-#         "ENGINE": "django.db.backends.postgresql",
-#         "NAME": env("DB_NAME"),
-#         "USER": env("DB_USER"),
-#         "PASSWORD": env("DB_PASSWORD"),
-#         "HOST": env("DB_HOST"),
-#         "PORT": env("DB_PORT"),  # Leave empty if using default port
-#     }
-# }
+DATABASES = {
+    "default": {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": env("DB_NAME"),
+        "USER": env("DB_USER"),
+        "PASSWORD": env("DB_PASSWORD"),
+        "HOST": env("DB_HOST"),
+        "PORT": env("DB_PORT"),  # Leave empty if using default port
+    }
+}
 
-DATABASES = {"default": env.db("DATABASE_URL")}  # For Heroku
+# DATABASES = {"default": env.db("DATABASE_URL")}  # For Heroku
 
 
 # Password validation
@@ -275,4 +275,4 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 AUTH_USER_MODEL = "user_management.User"
 
 # Deploying with Heroku
-django_heroku.settings(locals())
+# django_heroku.settings(locals())
