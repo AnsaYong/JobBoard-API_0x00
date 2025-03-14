@@ -269,7 +269,7 @@ class JobApplicationViewSet(viewsets.ModelViewSet):
             JobApplicationStatus, job_status_code=job_status_code
         )
 
-        # Log status change history
+        # Log status change by updating the history
         JobApplicationStatusHistory.objects.create(
             job_application=job_application, status=status, changed_by=request.user
         )
