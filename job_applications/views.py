@@ -265,7 +265,9 @@ class JobApplicationViewSet(viewsets.ModelViewSet):
             )
 
         job_status_code = request.data.get("status_code")
-        status = get_object_or_404(JobApplicationStatus, status_code=job_status_code)
+        status = get_object_or_404(
+            JobApplicationStatus, job_status_code=job_status_code
+        )
 
         # Log status change history
         JobApplicationStatusHistory.objects.create(
